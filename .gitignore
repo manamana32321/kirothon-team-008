@@ -21,3 +21,12 @@ out/
 # 기타
 .DS_Store
 *.log
+
+# 앱
+data/
+*.db
+*.db-journal
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+src/generated/
