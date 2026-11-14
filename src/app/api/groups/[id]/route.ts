@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { dateKey } from "@/lib/alarm";
 import { attendanceStatuses } from "@/lib/attendance";
+import type { GroupState } from "@/lib/group-state";
 import { error } from "@/lib/http";
 import { recordAbsences } from "@/lib/penalty-store";
 
@@ -59,7 +60,7 @@ export async function GET(
     include: { member: { select: { nickname: true } } },
   });
 
-  return Response.json({
+  const body: GroupState = {
     id: group.id,
     name: group.name,
     inviteCode: group.inviteCode,
@@ -91,5 +92,6 @@ export async function GET(
       points: p.points,
       reason: p.reason,
     })),
-  });
+  };
+  return Response.json(body);
 }

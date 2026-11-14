@@ -14,6 +14,7 @@
 | 구현 | Spec (tasks 1) | 작업 1 골격: Next.js 16 + Tailwind 4 + shadcn/ui, Prisma 7 + SQLite(better-sqlite3 어댑터), Zod, Vitest. lint, tsc, build, 페이지 응답 확인 | `package.json`, `prisma.config.ts`, `src/db.ts` |
 | 구현 | Spec (tasks 2·3·4) + Crew 병렬 서브에이전트 | 작업 2(데이터 모델), 3(결정론 로직), 4(SSE)를 서브에이전트 3개가 각자 워크트리에서 동시에 구현. 공유 문서는 건드리지 않게 소유권을 나눠 충돌 없이 PR #4~#6으로 머지. 머지 전 네 브랜치를 합쳐 테스트 29개, lint, build, 마이그레이션·시드 확인 | `prisma/`, `src/lib/`, `src/app/api/groups/[id]/events/`, `tests/` |
 | 구현 | Spec (tasks 5) | API 7개 구현. 클립 선택 규칙(받는 사람의 가장 오래된 미사용 클립)을 서버 한 곳에 두고 `nextClip`으로 내려줌. dev 서버에 curl 시나리오로 생성·참여·409·404·400·클립 업로드/재생 바이트 일치·무응답 지연 차감·중복 차감 없음·SSE 이벤트 수신 확인 | `src/app/api/`, `src/lib/penalty-store.ts`, `src/lib/http.ts` |
+| 구현 | Spec (tasks 6) | 화면 4개 구현: 첫 화면(만들기/참여), 그룹 화면(알람 설정, 멤버 상태, 벌금 장부, SSE 갱신), 클립 녹화(카메라 토글, 카메라 거부 시 음성 전환, 10초 자동 정지), 알람 오버레이(클립 반복 재생, 없으면 WebAudio 비프, 간다/못 간다로 응답과 정지). API 응답 타입 `GroupState`를 서버와 화면이 같이 씀. lint, tsc, build, 페이지 200 확인 | `src/app/page.tsx`, `src/app/g/[id]/page.tsx`, `src/components/` |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
 | 기타 | Steering | 이름과 아이콘 정의: 영어 Gymcall, 한국어 운동기, 아이콘 ㅇㄷㄱ | `.kiro/steering/product.md`, `src/app/icon.svg` |
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
@@ -37,3 +38,4 @@
 - 기존 하네스가 Claude Code 형식이었다. 훅 입력 JSON 필드가 다를 수 있어 특정 필드 대신 입력 전체를 검사하도록 다시 짰고, 실제 Kiro에서 시험했다.
 - Stop 훅 트리거 이름을 `AgentStop`으로 썼더니 동작하지 않았다. 이름 네 가지를 동시에 시험해 `Stop`이 맞음을 확인했다.
 - 한계: 훅 시험은 Windows의 kiro-cli로만 했고 IDE에서는 확인하지 못했다.
+- Next.js 16의 `cacheComponents`에서 `useParams()`를 Suspense 밖에서 쓰면 prerender가 막혔다. 페이지를 서버 컴포넌트로 두고 `params`를 Suspense 안에서 풀어 클라이언트 컴포넌트에 넘겨 해결했다.
