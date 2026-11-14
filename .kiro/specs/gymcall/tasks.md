@@ -1,4 +1,4 @@
-# 작업 목록: 짐콜
+# 작업 목록: 운동기 (Gymcall)
 
 요구사항: `requirements.md`. 설계: `design.md`. 각 작업은 끝나면 `BUILD_REPORT.md`에 한 줄 남긴다.
 
@@ -9,28 +9,28 @@
   - `pnpm dev`로 빈 페이지가 뜨는지 확인한다.
   - _Requirements: N1, N3, N4_
 
-- [ ] 2. 데이터 모델
-  - [ ] 2.1 `prisma/schema.prisma`에 Group, Member, Response, Clip, PenaltyLog를 설계대로 정의한다. unique 제약 (groupId, nickname), (memberId, date)를 넣는다.
+- [x] 2. 데이터 모델
+  - [x] 2.1 `prisma/schema.prisma`에 Group, Member, Response, Clip, PenaltyLog를 설계대로 정의한다. unique 제약 (groupId, nickname), (memberId, date)를 넣는다.
     - _Requirements: 1.4, 3.3, 4.5, 6.2_
-  - [ ] 2.2 `src/db.ts` Prisma 클라이언트와 `prisma/seed.ts`를 만든다. 시드는 가상 닉네임만, 클립은 넣지 않는다.
+  - [x] 2.2 `src/db.ts` Prisma 클라이언트와 `prisma/seed.ts`를 만든다. 시드는 가상 닉네임만, 클립은 넣지 않는다.
     - _Requirements: N2_
 
-- [ ] 3. 결정론 로직과 테스트 (1 이후, 2와 병렬 가능)
-  - [ ] 3.1 `lib/alarm.ts`: `shouldRing(now, alarmTime, respondedToday)`, `dateKey(now)`. 테스트: 시각 경계, 이미 응답한 날, 자정 넘김.
+- [x] 3. 결정론 로직과 테스트 (1 이후, 2와 병렬 가능)
+  - [x] 3.1 `lib/alarm.ts`: `shouldRing(now, alarmTime, respondedToday)`, `dateKey(now)`. 테스트: 시각 경계, 이미 응답한 날, 자정 넘김.
     - _Requirements: 2.1, 3.1, 3.3_
-  - [ ] 3.2 `lib/attendance.ts`: 멤버별 상태 pending, going, skipping, no_response. `NO_RESPONSE_MINUTES = 10`. 테스트: 응답 전, 응답, 10분 경과.
+  - [x] 3.2 `lib/attendance.ts`: 멤버별 상태 pending, going, skipping, no_response. `NO_RESPONSE_MINUTES = 10`. 테스트: 응답 전, 응답, 10분 경과.
     - _Requirements: 5.1, 5.2_
-  - [ ] 3.3 `lib/penalty.ts`: 확정 불참 목록으로 차감 계산, 같은 날 중복 차감 금지. 테스트: 중복 방지, 0 미만 허용.
+  - [x] 3.3 `lib/penalty.ts`: 확정 불참 목록으로 차감 계산, 같은 날 중복 차감 금지. 테스트: 중복 방지, 0 미만 허용.
     - _Requirements: 6.2, 6.3_
-  - [ ] 3.4 `lib/clip.ts`: 후보 형식 중 지원 형식 선택, 영상/음성 판정. 테스트: 선택 순서, 음성만일 때 audio 형식.
+  - [x] 3.4 `lib/clip.ts`: 후보 형식 중 지원 형식 선택, 영상/음성 판정. 테스트: 선택 순서, 음성만일 때 audio 형식.
     - _Requirements: 4.1, 4.2, 4.6_
-  - [ ] 3.5 `lib/schemas.ts`: API 입력 Zod 스키마를 한 곳에 정의한다.
+  - [x] 3.5 `lib/schemas.ts`: API 입력 Zod 스키마를 한 곳에 정의한다.
     - _Requirements: 1.1, 2.1, 3.3, 4.5_
 
-- [ ] 4. 실시간 (1 이후)
-  - [ ] 4.1 `lib/events.ts`: 그룹별 구독과 발행. 이벤트는 `group.updated`, `response.created`, `clip.created`, `penalty.applied`.
+- [x] 4. 실시간 (1 이후)
+  - [x] 4.1 `lib/events.ts`: 그룹별 구독과 발행. 이벤트는 `group.updated`, `response.created`, `clip.created`, `penalty.applied`.
     - _Requirements: 2.2, 3.4_
-  - [ ] 4.2 `GET /api/groups/:id/events` SSE Route Handler (Node 런타임, 연결 종료 시 구독 해제).
+  - [x] 4.2 `GET /api/groups/:id/events` SSE Route Handler (Node 런타임, 연결 종료 시 구독 해제).
     - _Requirements: 2.2, 3.4_
 
 - [ ] 5. API (2, 3, 4 이후)

@@ -1,4 +1,4 @@
-# 설계: 짐콜
+# 설계: 운동기 (Gymcall)
 
 요구사항: `.kiro/specs/gymcall/requirements.md`. 스택은 `.kiro/steering/tech.md`를 따른다.
 
