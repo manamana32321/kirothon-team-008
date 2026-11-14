@@ -6,3 +6,65 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
+model Group {
+  id            String   @id @default(cuid())
+  name          String
+  inviteCode    String   @unique
+  alarmTime     String?
+  startPoints   Int
+  penaltyPoints Int
+  members       Member[]
+  clips         Clip[]
+}
+
+model Member {
+  id            String       @id @default(cuid())
+  groupId       String
+  group         Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  nickname      String
+  points        Int
+  responses     Response[]
+  penaltyLogs   PenaltyLog[]
+  clipsSent     Clip[]       @relation("ClipFrom")
+  clipsReceived Clip[]       @relation("ClipTo")
+
+  @@unique([groupId, nickname])
+}
+
+model Response {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date      String
+  choice    String
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, date])
+}
+
+model Clip {
+  id           String   @id @default(cuid())
+  groupId      String
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromMemberId String
+  fromMember   Member   @relation("ClipFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  toMemberId   String
+  toMember     Member   @relation("ClipTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+  filePath     String
+  mimeType     String
+  hasVideo     Boolean
+  createdAt    DateTime @default(now())
+  usedDate     String?
+}
+
+model PenaltyLog {
+  id       String @id @default(cuid())
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date     String
+  points   Int
+  reason   String
+
+  @@unique([memberId, date])
+}
