@@ -10,6 +10,7 @@ import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PushButton } from "@/components/push-button";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
@@ -238,6 +239,8 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
             </Button>
           </div>
         )}
+
+        <PushButton groupId={id} memberId={me.id} />
 
         {poked && (
           <p role="status" className="bg-primary text-primary-foreground rounded-lg p-3 text-center font-semibold">
