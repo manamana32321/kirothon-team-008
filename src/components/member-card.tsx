@@ -124,18 +124,6 @@ export function MemberCard({
           ))}
         </div>
       )}
-      {clips.length > 0 && (
-        <span className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center">
-          <span className="flex gap-1.5">
-            {clips.map((c, i) => (
-              <span
-                key={c.id}
-                className={`size-2.5 rounded-full border-2 border-foreground ${i === index ? "bg-primary" : "bg-card"}`}
-              />
-            ))}
-          </span>
-        </span>
-      )}
 
       {!isMe && (
         <span
@@ -164,6 +152,16 @@ export function MemberCard({
       )}
 
       <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-card text-foreground border-t-[3px] border-foreground p-2">
+        {clips.length > 0 && (
+          <span className="pointer-events-none absolute inset-x-0 bottom-full mb-2 flex justify-center gap-1.5">
+            {clips.map((c, i) => (
+              <span
+                key={c.id}
+                className={`size-2.5 rounded-full border-2 border-foreground ${i === index ? "bg-primary" : "bg-card"}`}
+              />
+            ))}
+          </span>
+        )}
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold">
             {member.nickname}
