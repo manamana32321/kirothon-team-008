@@ -126,7 +126,7 @@ export function MemberCard({
       )}
       {clips.length > 0 && (
         <span className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center">
-          <span className="bg-card flex gap-1.5 rounded-full border-2 border-foreground px-2 py-1">
+          <span className="flex gap-1.5">
             {clips.map((c, i) => (
               <span
                 key={c.id}
