@@ -411,7 +411,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         </div>
       </div>
 
-      {recording && <ClipRecorder groupId={id} fromMemberId={me.id} onClose={() => setRecording(false)} />}
+      {recording && <ClipRecorder groupId={id} fromMemberId={me.id} onClose={() => { setRecording(false); load(); }} />}
     </>
   );
 }
