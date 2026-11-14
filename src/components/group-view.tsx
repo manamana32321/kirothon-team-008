@@ -310,9 +310,8 @@ export function GroupView({ id }: { id: string }) {
           <div className="relative">
             {streak >= 2 && (
               <span aria-live="polite" className="pointer-events-none absolute -top-3 -left-2 z-10">
-                <span
-                  className={`streak-badge ${streakTier(streak)} px-2.5 py-0.5 font-black text-white tabular-nums`}
-                >
+                <span className={`streak-scale ${streakTier(streak)}`}>
+                  <span className="streak-badge px-2.5 py-0.5 font-black text-white tabular-nums">
                   <span className="streak-bg streak-bg-1" />
                   <span className="streak-bg streak-bg-2" />
                   <span className="streak-bg streak-bg-3" />
@@ -327,6 +326,7 @@ export function GroupView({ id }: { id: string }) {
                   {(STREAK_TIERS as readonly number[]).includes(streak) && (
                     <span key={`burst-${streak}`} className="streak-burst" />
                   )}
+                  </span>
                 </span>
               </span>
             )}
