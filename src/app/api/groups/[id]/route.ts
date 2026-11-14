@@ -16,7 +16,7 @@ async function loadGroup(id: string, date: string) {
           responses: { where: { date } },
           clipsSent: {
             orderBy: { createdAt: "desc" },
-            take: 1,
+            take: 5,
           },
           wakeReceived: {
             orderBy: { createdAt: "desc" },
@@ -79,7 +79,6 @@ export async function GET(
         : { lat: group.meetupLat, lng: group.meetupLng, radiusM: group.meetupRadiusM },
     date,
     members: group.members.map((m) => {
-      const clip = m.clipsSent[0];
       const poke = m.wakeReceived[0];
       return {
         id: m.id,
@@ -87,7 +86,7 @@ export async function GET(
         points: m.points,
         status: statuses[m.id],
         source: (m.responses[0]?.source ?? null) as "manual" | "auto" | null,
-        clip: clip ? { id: clip.id, mimeType: clip.mimeType, hasVideo: clip.hasVideo } : null,
+        clips: m.clipsSent.map((c) => ({ id: c.id, mimeType: c.mimeType, hasVideo: c.hasVideo })),
         lastPoke: poke
           ? { at: poke.createdAt.toISOString(), fromNickname: poke.fromMember.nickname }
           : null,
