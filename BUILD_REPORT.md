@@ -22,6 +22,7 @@
 | 검증 | Hooks (PreToolUse) | 시크릿 유출 차단. kiro-cli 3.3.0에서 가짜 AWS 키 쓰기 차단, 평문 통과 확인 | `.kiro/hooks/secret-guard.json`, `.kiro/hooks/secret-guard.sh` |
 | 검증 | Hooks (Stop) | doc-sync 훅이 에이전트의 BUILD_REPORT 갱신을 실제로 유도함을 확인 | `.kiro/hooks/doc-sync.json` |
 | 기타 | Steering + Hooks | 개인 worktree 규칙과 main 직접 커밋/push 차단 훅 이식. 스크립트 단독 시험만 완료, Kiro 실행 시험은 아직 | `.kiro/steering/worktree.md`, `.kiro/hooks/main-branch-guard.json` |
+| 검증 | Skills + Hooks (Stop) | 화면 변경은 사용자가 눈으로 확인 후 머지. 개인 Claude Code 스킬 `local-check-guide`를 Kiro 워크스페이스 스킬로 이식하고, main 대비 화면 파일 변경이 있는데 확인 안내 표시가 없으면 에이전트를 멈춰 안내를 요구하는 훅 추가. 스크립트 단독 시험 6가지 통과 | `.kiro/skills/local-check-guide/SKILL.md`, `.kiro/hooks/visual-check.json` |
 
 ## 개발 과정에서 바뀐 점
 
