@@ -39,6 +39,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +49,9 @@ public class AlarmWatchService extends Service {
     private static final String BASE = "https://gymcall.json-server.win";
     private static final String CHANNEL = "alarm_watch";
     private static final int POLL_SECONDS = 10;
+    private static final long[] POKE_PATTERN = {0, 120, 60, 120, 60, 240};
+
+    static volatile boolean appVisible = false;
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private ScheduledExecutorService pool;
@@ -54,6 +59,7 @@ public class AlarmWatchService extends Service {
     private View overlay;
     private Ringtone ringtone;
     private Vibrator vibrator;
+    private final Map<String, String> seenPokes = new HashMap<>();
 
     @Override
     public void onCreate() {
@@ -122,6 +128,7 @@ public class AlarmWatchService extends Service {
                 String groupId = entry.getString("groupId");
                 String memberId = entry.getString("memberId");
                 JSONObject group = new JSONObject(request("GET", "/api/groups/" + groupId, cookie, null).body);
+                checkPoke(group, groupId, memberId);
                 if (isRinging(group, memberId)) {
                     String name = group.optString("name", "");
                     main.post(() -> showOverlay(name, groupId, memberId));
@@ -130,6 +137,25 @@ public class AlarmWatchService extends Service {
             }
             main.post(this::hideOverlay);
         } catch (Exception ignored) {
+        }
+    }
+
+    private void checkPoke(JSONObject group, String groupId, String memberId) throws Exception {
+        JSONArray members = group.getJSONArray("members");
+        String at = "";
+        for (int i = 0; i < members.length(); i++) {
+            JSONObject m = members.getJSONObject(i);
+            if (!memberId.equals(m.getString("id"))) continue;
+            JSONObject poke = m.optJSONObject("lastPoke");
+            if (poke != null) at = poke.optString("at", "");
+        }
+        String previous = seenPokes.put(groupId, at);
+        if (previous == null || previous.equals(at) || at.isEmpty()) return;
+        if (appVisible || overlay != null || vibrator == null) return;
+        if (Build.VERSION.SDK_INT >= 26) {
+            vibrator.vibrate(VibrationEffect.createWaveform(POKE_PATTERN, -1));
+        } else {
+            vibrator.vibrate(POKE_PATTERN, -1);
         }
     }
 
