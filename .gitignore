@@ -30,3 +30,4 @@ data/
 *.tsbuildinfo
 next-env.d.ts
 src/generated/
+.tmp/
