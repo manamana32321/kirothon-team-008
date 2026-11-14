@@ -1,28 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { AuthForm } from "@/components/auth-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { send } from "@/lib/api-client";
-import { LAST_GROUP_KEY, memberKey } from "@/lib/group-state";
+import { useMe } from "@/lib/use-me";
 
-type Joined = { groupId: string; memberId: string };
+type Joined = { groupId: string };
 
 export default function Home() {
   const router = useRouter();
-  const [nickname, setNickname] = useState("");
+  const { me, reload } = useMe();
   const [groupName, setGroupName] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (new URLSearchParams(location.search).has("new")) return;
-    const last = localStorage.getItem(LAST_GROUP_KEY);
-    if (last && localStorage.getItem(memberKey(last))) router.replace(`/g/${last}`);
-  }, [router]);
 
   async function enter(url: string, json: unknown) {
     setBusy(true);
@@ -30,9 +26,12 @@ export default function Home() {
     const result = await send<Joined>(url, { method: "POST", json });
     setBusy(false);
     if (result.error !== undefined) return setError(result.error);
-    localStorage.setItem(memberKey(result.data.groupId), result.data.memberId);
-    localStorage.setItem(LAST_GROUP_KEY, result.data.groupId);
     router.push(`/g/${result.data.groupId}`);
+  }
+
+  async function logout() {
+    await send("/api/auth/logout", { method: "POST" });
+    await reload();
   }
 
   return (
@@ -42,57 +41,80 @@ export default function Home() {
         <p className="text-muted-foreground">알람 끄기가 곧 &quot;운동 간다&quot;. ㅇㄷㄱ?</p>
       </header>
 
-      <Input
-        placeholder="내 닉네임"
-        value={nickname}
-        maxLength={20}
-        onChange={(e) => setNickname(e.target.value)}
-      />
+      {me === undefined && <p>불러오는 중</p>}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>그룹 만들기</CardTitle>
-          <CardDescription>초대 코드가 생겨요. 친구에게 보내 주세요.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Input
-            placeholder="그룹 이름 (예: 새벽 헬스)"
-            value={groupName}
-            maxLength={30}
-            onChange={(e) => setGroupName(e.target.value)}
-          />
-          <Button
-            disabled={busy || !nickname.trim() || !groupName.trim()}
-            onClick={() => enter("/api/groups", { name: groupName, nickname })}
-          >
-            만들기
-          </Button>
-        </CardContent>
-      </Card>
+      {me && !me.user && <AuthForm onDone={reload} />}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>초대 코드로 참여</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Input
-            placeholder="6자리 코드"
-            value={code}
-            maxLength={32}
-            className="uppercase"
-            onChange={(e) => setCode(e.target.value)}
-          />
-          <Button
-            variant="secondary"
-            disabled={busy || !nickname.trim() || !code.trim()}
-            onClick={() => enter("/api/groups/join", { inviteCode: code, nickname })}
-          >
-            참여
-          </Button>
-        </CardContent>
-      </Card>
+      {me?.user && (
+        <>
+          <div className="flex items-center justify-between">
+            <span className="font-medium">{me.user.username}</span>
+            <Button variant="ghost" size="sm" onClick={logout}>
+              로그아웃
+            </Button>
+          </div>
 
-      {error && <p className="text-destructive text-sm">{error}</p>}
+          {me.groups.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>내 그룹</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                {me.groups.map((g) => (
+                  <Link key={g.groupId} href={`/g/${g.groupId}`} className="rounded-md border p-3">
+                    {g.name}
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>그룹 만들기</CardTitle>
+              <CardDescription>초대 코드가 생겨요. 친구에게 보내 주세요.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex gap-2">
+              <Input
+                placeholder="그룹 이름 (예: 새벽 헬스)"
+                value={groupName}
+                maxLength={30}
+                onChange={(e) => setGroupName(e.target.value)}
+              />
+              <Button
+                disabled={busy || !groupName.trim()}
+                onClick={() => enter("/api/groups", { name: groupName })}
+              >
+                만들기
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>초대 코드로 참여</CardTitle>
+            </CardHeader>
+            <CardContent className="flex gap-2">
+              <Input
+                placeholder="6자리 코드"
+                value={code}
+                maxLength={32}
+                className="uppercase"
+                onChange={(e) => setCode(e.target.value)}
+              />
+              <Button
+                variant="secondary"
+                disabled={busy || !code.trim()}
+                onClick={() => enter("/api/groups/join", { inviteCode: code })}
+              >
+                참여
+              </Button>
+            </CardContent>
+          </Card>
+
+          {error && <p className="text-destructive text-sm">{error}</p>}
+        </>
+      )}
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { requireMember } from "@/lib/auth";
 import { publish } from "@/lib/events";
 import { error, parseJson } from "@/lib/http";
 import { pokeSchema } from "@/lib/schemas";
@@ -11,6 +12,8 @@ export async function POST(
   const input = await parseJson(request, pokeSchema);
   if ("response" in input) return input.response;
   const { fromMemberId } = input.data;
+  const owner = await requireMember(request, id, fromMemberId);
+  if ("response" in owner) return owner.response;
   const toMemberIds = [...new Set(input.data.toMemberIds)];
 
   if (toMemberIds.includes(fromMemberId)) return error(400, "자기 자신은 찌를 수 없습니다");

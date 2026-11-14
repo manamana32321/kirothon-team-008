@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 import { db } from "@/db";
+import { requireUser } from "@/lib/auth";
 import { isUniqueViolation, parseJson } from "@/lib/http";
 import { createGroupSchema } from "@/lib/schemas";
 
@@ -12,9 +13,12 @@ function inviteCode() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireUser(request);
+  if ("response" in auth) return auth.response;
   const input = await parseJson(request, createGroupSchema);
   if ("response" in input) return input.response;
-  const { name, nickname } = input.data;
+  const { name } = input.data;
+  const { user } = auth;
 
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
@@ -24,7 +28,9 @@ export async function POST(request: Request) {
           inviteCode: inviteCode(),
           startPoints: DEFAULT_START_POINTS,
           penaltyPoints: DEFAULT_PENALTY_POINTS,
-          members: { create: { nickname, points: DEFAULT_START_POINTS } },
+          members: {
+            create: { nickname: user.username, userId: user.id, points: DEFAULT_START_POINTS },
+          },
         },
         include: { members: true },
       });
