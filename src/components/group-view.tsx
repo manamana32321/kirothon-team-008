@@ -5,13 +5,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { ClipRecorder } from "@/components/clip-recorder";
+import { LoadError } from "@/components/load-error";
 import { MemberCard } from "@/components/member-card";
+import { GroupSkeleton } from "@/components/skeletons";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PushButton } from "@/components/push-button";
 import { shouldRing } from "@/lib/alarm";
-import { send } from "@/lib/api-client";
+import { isRetryable, send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
 import type { GroupState } from "@/lib/group-state";
 import { useMe } from "@/lib/use-me";
@@ -51,8 +53,10 @@ function streakTier(streak: number) {
 }
 
 export function GroupView({ id }: { id: string }) {
-  const { me, reload } = useMe();
-  if (me === undefined) return <p className="p-6">불러오는 중</p>;
+  const { me, error, reload } = useMe();
+  if (me === undefined) {
+    return error ? <LoadError message={error} onRetry={reload} /> : <GroupSkeleton />;
+  }
   if (!me.user) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
@@ -68,7 +72,7 @@ export function GroupView({ id }: { id: string }) {
 
 function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [soundReady, setSoundReady] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
@@ -88,9 +92,12 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   }, [memberId]);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
-    if (!res.ok) return setLoadError("그룹을 찾을 수 없어요.");
-    const next: GroupState = await res.json();
+    const res = await send<GroupState>(`/api/groups/${id}`, { method: "GET" });
+    if (res.error !== undefined) {
+      return setLoadError({ message: res.error, retryable: isRetryable(res.status) });
+    }
+    setLoadError(null);
+    const next = res.data;
     setGroup(next);
     const mine = next.members.find((m) => m.id === memberIdRef.current)?.lastPoke ?? null;
     const at = mine?.at ?? null;
@@ -188,10 +195,16 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     return () => clearInterval(timer);
   }, [ringing, anyClipSound, soundReady]);
 
-  if (loadError) return <p className="p-6">{loadError}</p>;
-  if (!group) return <p className="p-6">불러오는 중</p>;
-
-  if (!me) return <p className="p-6">불러오는 중</p>;
+  if (!group && loadError) {
+    return (
+      <LoadError
+        message={loadError.message}
+        onRetry={loadError.retryable ? load : undefined}
+        showHome={!loadError.retryable}
+      />
+    );
+  }
+  if (!group || !me) return <GroupSkeleton />;
 
   async function respond(choice: "going" | "skipping") {
     if (me?.status === choice) return;

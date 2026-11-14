@@ -5,11 +5,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useState } from "react";
+import { LoadError } from "@/components/load-error";
+import { SettingsSkeleton } from "@/components/skeletons";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { send } from "@/lib/api-client";
+import { isRetryable, send } from "@/lib/api-client";
 import { MEETUP_RADII_M } from "@/lib/config";
 import type { LatLng } from "@/lib/geo";
 import type { GroupState } from "@/lib/group-state";
@@ -29,12 +31,15 @@ function inMinutes(minutes: number) {
 
 export function GroupSettings({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
-  const [loadError, setLoadError] = useState("");
+  const [loadError, setLoadError] = useState<{ message: string; retryable: boolean } | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
-    if (!res.ok) return setLoadError("그룹을 찾을 수 없어요.");
-    setGroup(await res.json());
+    const res = await send<GroupState>(`/api/groups/${id}`, { method: "GET" });
+    if (res.error !== undefined) {
+      return setLoadError({ message: res.error, retryable: isRetryable(res.status) });
+    }
+    setLoadError(null);
+    setGroup(res.data);
   }, [id]);
 
   useEffect(() => {
@@ -44,8 +49,16 @@ export function GroupSettings({ id }: { id: string }) {
     return () => source.close();
   }, [id, load]);
 
-  if (loadError) return <p className="p-6">{loadError}</p>;
-  if (!group) return <p className="p-6">불러오는 중</p>;
+  if (!group && loadError) {
+    return (
+      <LoadError
+        message={loadError.message}
+        onRetry={loadError.retryable ? load : undefined}
+        showHome={!loadError.retryable}
+      />
+    );
+  }
+  if (!group) return <SettingsSkeleton />;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-4">

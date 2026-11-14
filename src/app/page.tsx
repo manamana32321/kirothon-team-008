@@ -7,6 +7,7 @@ import { AuthForm } from "@/components/auth-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { send } from "@/lib/api-client";
 import { useMe } from "@/lib/use-me";
 
@@ -14,7 +15,7 @@ type Joined = { groupId: string };
 
 export default function Home() {
   const router = useRouter();
-  const { me, reload } = useMe();
+  const { me, error: meError, reload } = useMe();
   const [groupName, setGroupName] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +42,19 @@ export default function Home() {
         <p className="text-muted-foreground">ㅇㄷㄱ?</p>
       </header>
 
-      {me === undefined && <p>불러오는 중</p>}
+      {me === undefined && !meError && (
+        <div aria-busy="true" className="flex flex-col gap-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      )}
+
+      {me === undefined && meError && (
+        <div role="alert" className="flex flex-col gap-3">
+          <p>{meError}</p>
+          <Button onClick={reload}>다시 시도</Button>
+        </div>
+      )}
 
       {me && !me.user && <AuthForm onDone={reload} />}
 

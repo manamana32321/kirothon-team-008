@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MapMember } from "@/components/meetup-map";
 import { Switch } from "@/components/ui/switch";
+import { send } from "@/lib/api-client";
 import { LOCATION_STALE_SECONDS } from "@/lib/config";
 import { type LatLng, distanceM } from "@/lib/geo";
 import type { GroupState } from "@/lib/group-state";
@@ -36,16 +37,20 @@ export function MeetupTab({
 }) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [windowOpen, setWindowOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const lastLoad = useRef(0);
   const scheduled = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
     lastLoad.current = Date.now();
-    const res = await fetch(`/api/groups/${group.id}/locations`, { cache: "no-store" });
-    if (!res.ok) return;
-    const body: { sharing: boolean; positions: Position[] } = await res.json();
-    setWindowOpen(body.sharing);
-    setPositions(body.positions);
+    const res = await send<{ sharing: boolean; positions: Position[] }>(
+      `/api/groups/${group.id}/locations`,
+      { method: "GET" },
+    );
+    if (res.error !== undefined) return setLoadFailed(true);
+    setLoadFailed(false);
+    setWindowOpen(res.data.sharing);
+    setPositions(res.data.positions);
   }, [group.id]);
 
   useEffect(() => {
@@ -88,7 +93,15 @@ export function MeetupTab({
         />
       </label>
       {sharing.notice && <p className="text-muted-foreground text-sm">{sharing.notice}</p>}
-      {!windowOpen && !sharing.notice && (
+      {loadFailed && (
+        <p role="alert" className="text-destructive text-sm">
+          위치를 불러오지 못했어요.{" "}
+          <button type="button" className="underline" onClick={() => load()}>
+            다시 시도
+          </button>
+        </p>
+      )}
+      {!windowOpen && !sharing.notice && !loadFailed && (
         <p className="text-muted-foreground text-sm">지금은 공유 시간이 아니에요. 알람이 울리면 열려요.</p>
       )}
 

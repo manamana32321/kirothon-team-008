@@ -16,19 +16,18 @@ export type Me =
       }[];
     };
 
-async function fetchMe(): Promise<Me> {
-  const result = await send<Me>("/api/auth/me", { method: "GET" });
-  return result.error === undefined ? result.data : { user: null };
-}
-
 export function useMe() {
   const [me, setMe] = useState<Me | undefined>(undefined);
+  const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let live = true;
-    fetchMe().then((next) => {
-      if (live) setMe(next);
+    send<Me>("/api/auth/me", { method: "GET" }).then((result) => {
+      if (!live) return;
+      if (result.error !== undefined) return setError(result.error);
+      setError("");
+      setMe(result.data);
     });
     return () => {
       live = false;
@@ -37,5 +36,5 @@ export function useMe() {
 
   const reload = useCallback(async () => setVersion((v) => v + 1), []);
 
-  return { me, reload };
+  return { me, error, reload };
 }
