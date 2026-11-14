@@ -19,6 +19,7 @@ model Group {
   meetupRadiusM Int      @default(100)
   members       Member[]
   clips         Clip[]
+  wakeCalls     WakeCall[]
 }
 
 model Member {
@@ -31,6 +32,8 @@ model Member {
   penaltyLogs   PenaltyLog[]
   clipsSent     Clip[]       @relation("ClipFrom")
   clipsReceived Clip[]       @relation("ClipTo")
+  wakeSent      WakeCall[]   @relation("WakeFrom")
+  wakeReceived  WakeCall[]   @relation("WakeTo")
 
   @@unique([groupId, nickname])
 }
@@ -71,4 +74,16 @@ model PenaltyLog {
   reason   String
 
   @@unique([memberId, date])
+}
+
+model WakeCall {
+  id           String    @id @default(cuid())
+  groupId      String
+  group        Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromMemberId String
+  fromMember   Member    @relation("WakeFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  toMemberId   String
+  toMember     Member    @relation("WakeTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  ackedAt      DateTime?
 }

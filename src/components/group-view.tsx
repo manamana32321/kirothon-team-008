@@ -18,7 +18,14 @@ import type { GroupEvent } from "@/lib/events";
 import { type GroupState, memberKey } from "@/lib/group-state";
 import { useLocationSharing } from "@/lib/use-location-sharing";
 
-const EVENTS: GroupEvent[] = ["group.updated", "response.created", "clip.created", "penalty.applied"];
+const EVENTS: GroupEvent[] = [
+  "group.updated",
+  "response.created",
+  "clip.created",
+  "penalty.applied",
+  "wake.called",
+  "wake.acked",
+];
 
 const STATUS: Record<AttendanceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "응답 전", variant: "outline" },
@@ -83,6 +90,20 @@ export function GroupView({ id }: { id: string }) {
 
   const responded = respondedLocal || me.status === "going" || me.status === "skipping";
   const ringing = shouldRing(now, group.alarmTime, responded);
+  const wakeRinging = me.wake?.status === "calling" && now.getTime() < Date.parse(me.wake.expiresAt);
+
+  async function wakeUp(toMemberId: string) {
+    await send(`/api/groups/${id}/wake`, {
+      method: "POST",
+      json: { fromMemberId: me!.id, toMemberId },
+    });
+    await load();
+  }
+
+  async function awake() {
+    await send(`/api/groups/${id}/wake/ack`, { method: "POST", json: { memberId: me!.id } });
+    await load();
+  }
 
   async function armAlarm() {
     const ctx = new AudioContext();
@@ -160,6 +181,8 @@ export function GroupView({ id }: { id: string }) {
               {group.members.map((m) => {
                 const s = m.source === "auto" ? ARRIVED : STATUS[m.status];
                 const canWake = m.id !== me.id && (m.status === "pending" || m.status === "no_response");
+                const calling = m.wake?.status === "calling" && now.getTime() < Date.parse(m.wake.expiresAt);
+                const noAnswer = m.wake?.status === "expired" && m.wake.fromMemberId === me.id && !m.awake;
                 return (
                   <div key={m.id} className="flex items-center gap-2 py-2">
                     <span className="flex-1 font-medium">
@@ -170,9 +193,17 @@ export function GroupView({ id }: { id: string }) {
                       <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
                     )}
                     <Badge variant={s.variant}>{s.label}</Badge>
+                    {m.awake && <Badge variant="outline">일어남</Badge>}
+                    {calling && <span className="text-muted-foreground text-xs">호출 중</span>}
+                    {noAnswer && <span className="text-muted-foreground text-xs">응답 없음</span>}
+                    {m.id !== me.id && (
+                      <Button size="sm" variant="outline" onClick={() => wakeUp(m.id)}>
+                        지금 깨우기
+                      </Button>
+                    )}
                     {canWake && (
                       <Button size="sm" variant="outline" onClick={() => setTarget({ id: m.id, nickname: m.nickname })}>
-                        깨우기
+                        클립
                       </Button>
                     )}
                   </div>
@@ -215,7 +246,11 @@ export function GroupView({ id }: { id: string }) {
       {target && (
         <ClipRecorder groupId={id} fromMemberId={me.id} to={target} onClose={() => setTarget(null)} />
       )}
-      {ringing && <AlarmOverlay me={me} audio={audio} onRespond={respond} />}
+      {wakeRinging && me.wake ? (
+        <AlarmOverlay me={me} audio={audio} wakeFrom={me.wake.fromNickname} onRespond={respond} onAwake={awake} />
+      ) : (
+        ringing && <AlarmOverlay me={me} audio={audio} onRespond={respond} />
+      )}
     </main>
   );
 }

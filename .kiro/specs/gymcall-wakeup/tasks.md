@@ -4,31 +4,31 @@
 
 ## 1단계: SSE
 
-- [ ] 1. 결정론 로직과 테스트
-  - [ ] 1.1 `lib/config.ts`에 `WAKE_CALL_MAX_MINUTES = 5`.
-  - [ ] 1.2 `lib/wake.ts`: `wakeStatus`, `activeCallFor`. 테스트: 만료 경계, ack 후 상태, 여러 호출 중 active 선택.
+- [x] 1. 결정론 로직과 테스트
+  - [x] 1.1 `lib/config.ts`에 `WAKE_CALL_MAX_MINUTES = 5`.
+  - [x] 1.2 `lib/wake.ts`: `wakeStatus`, `activeCallFor`. 테스트: 만료 경계, ack 후 상태, 여러 호출 중 active 선택.
     - _Requirements: 12.5, 12.6, 13.3_
-  - [ ] 1.3 `lib/schemas.ts`에 호출 입력 스키마 추가.
+  - [x] 1.3 `lib/schemas.ts`에 호출 입력 스키마 추가.
     - _Requirements: 11.2_
 
-- [ ] 2. 데이터 모델 (1과 병렬 가능)
+- [x] 2. 데이터 모델 (1과 병렬 가능)
   - `prisma/schema.prisma`에 WakeCall 추가, 마이그레이션 생성.
   - _Requirements: 11.2, 13.1_
 
-- [ ] 3. 실시간과 API (1, 2 이후)
-  - [ ] 3.1 `lib/events.ts`에 `wake.called`, `wake.acked` 추가.
+- [x] 3. 실시간과 API (1, 2 이후)
+  - [x] 3.1 `lib/events.ts`에 `wake.called`, `wake.acked` 추가.
     - _Requirements: 12.1, 13.2_
-  - [ ] 3.2 `POST /api/groups/:id/wake`. 같은 그룹 검증, 자기 자신은 400, 횟수 제한 없음. 발행.
+  - [x] 3.2 `POST /api/groups/:id/wake`. 같은 그룹 검증, 자기 자신은 400, 횟수 제한 없음. 발행.
     - _Requirements: 11.2, 11.4, 11.5_
-  - [ ] 3.3 `POST /api/groups/:id/wake/ack`. 호출 멤버의 active 호출을 모두 닫고 사용한 클립 usedDate를 채운다. 발행.
+  - [x] 3.3 `POST /api/groups/:id/wake/ack`. 호출 멤버의 active 호출을 모두 닫고 사용한 클립 usedDate를 채운다. 발행.
     - _Requirements: 13.1, 13.2, 12.3_
-  - [ ] 3.4 `GET /api/groups/:id`에 멤버별 `awake`, 요청 멤버 기준 `activeWake`, 보낸 사람 기준 호출 상태를 추가.
+  - [x] 3.4 `GET /api/groups/:id`에 멤버별 `awake`, 요청 멤버 기준 `activeWake`, 보낸 사람 기준 호출 상태를 추가.
     - _Requirements: 12.7, 13.3, 13.4, 13.5_
 
-- [ ] 4. 화면 (3 이후)
-  - [ ] 4.1 멤버 목록에 "지금 깨우기" 버튼과 "호출 중 / 일어남 / 응답 없음" 표시. 일어남 표시.
+- [x] 4. 화면 (3 이후)
+  - [x] 4.1 멤버 목록에 "지금 깨우기" 버튼과 "호출 중 / 일어남 / 응답 없음" 표시. 일어남 표시.
     - _Requirements: 11.1, 11.3, 13.2, 13.3, 13.4_
-  - [ ] 4.2 호출 오버레이: 알람 오버레이 재사용, "일어났다" 버튼만. 5분 만료 자동 정지, 새로고침 시 재개, 재생 차단 시 점멸과 진동. 탭 필요 안내.
+  - [x] 4.2 호출 오버레이: 알람 오버레이 재사용, "일어났다" 버튼만. 5분 만료 자동 정지, 새로고침 시 재개, 재생 차단 시 점멸과 진동. 탭 필요 안내.
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8_
 
 - [ ] 5. 검증 (4 이후)
