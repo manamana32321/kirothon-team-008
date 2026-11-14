@@ -7,7 +7,13 @@ export type Me =
   | { user: null }
   | {
       user: { id: string; username: string };
-      groups: { groupId: string; name: string; memberId: string }[];
+      groups: {
+        groupId: string;
+        name: string;
+        memberId: string;
+        memberCount: number;
+        alarmTime: string | null;
+      }[];
     };
 
 async function fetchMe(): Promise<Me> {
