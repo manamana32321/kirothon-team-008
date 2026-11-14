@@ -1,4 +1,4 @@
-# 작업 목록: 운동 기상 버디
+# 작업 목록: 짐콜
 
 요구사항: `requirements.md`. 설계: `design.md`. 각 작업은 끝나면 `BUILD_REPORT.md`에 한 줄 남긴다.
 

@@ -1,25 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: wake-buddy
+  name: gymcall
   labels:
-    app.kubernetes.io/part-of: wake-buddy
+    app.kubernetes.io/part-of: gymcall
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-dns01
 spec:
   ingressClassName: traefik
   rules:
-    - host: wake.json-server.win
+    - host: gymcall.json-server.win
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: wake-buddy
+                name: gymcall
                 port:
                   name: http
   tls:
-    - secretName: wake-buddy-tls
+    - secretName: gymcall-tls
       hosts:
-        - wake.json-server.win
+        - gymcall.json-server.win

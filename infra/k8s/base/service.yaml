@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: wake-buddy
+  name: gymcall
   labels:
-    app.kubernetes.io/part-of: wake-buddy
+    app.kubernetes.io/part-of: gymcall
 spec:
   selector:
-    app.kubernetes.io/name: wake-buddy
+    app.kubernetes.io/name: gymcall
   ports:
     - name: http
       port: 80

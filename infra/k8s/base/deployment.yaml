@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wake-buddy
+  name: gymcall
   labels:
-    app.kubernetes.io/name: wake-buddy
-    app.kubernetes.io/part-of: wake-buddy
+    app.kubernetes.io/name: gymcall
+    app.kubernetes.io/part-of: gymcall
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: wake-buddy
+      app.kubernetes.io/name: gymcall
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: wake-buddy
-        app.kubernetes.io/part-of: wake-buddy
+        app.kubernetes.io/name: gymcall
+        app.kubernetes.io/part-of: gymcall
     spec:
       securityContext:
         fsGroup: 1000
@@ -54,4 +54,4 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: wake-buddy-data
+            claimName: gymcall-data
