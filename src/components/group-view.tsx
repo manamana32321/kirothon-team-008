@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, Settings } from "lucide-react";
+import { ChevronLeft, Flame, Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
@@ -261,9 +261,19 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         }`}
       >
         <header className="flex items-start justify-between pt-4">
-          <div>
-            <p className="text-muted-foreground text-sm">운동기</p>
-            <h1 className="text-[28px]">{group.name}</h1>
+          <div className="flex items-start gap-1">
+            <Link
+              href="/"
+              aria-label="그룹 목록"
+              title="그룹 목록"
+              className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
+            >
+              <ChevronLeft className="size-5" />
+            </Link>
+            <div>
+              <p className="text-muted-foreground text-sm">운동기</p>
+              <h1 className="text-[28px]">{group.name}</h1>
+            </div>
           </div>
           <Link
             href={`/g/${id}/settings`}
