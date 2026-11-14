@@ -62,3 +62,11 @@ export const pokeSchema = z.object({
 export const memberRefSchema = z.object({
   memberId: z.string().min(1),
 });
+
+export const pushSubscribeSchema = z.object({
+  memberId: z.string().min(1),
+  subscription: z.object({
+    endpoint: z.string().url(),
+    keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
+  }),
+});

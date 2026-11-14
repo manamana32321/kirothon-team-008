@@ -24,6 +24,7 @@ ENV PORT=3000
 ENV DATABASE_URL=file:/app/data/app.db
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/public ./public
 COPY --from=migrate /migrate/node_modules /migrate/node_modules
 COPY --from=build /app/prisma /migrate/prisma
 COPY --from=build /app/prisma.config.ts /migrate/prisma.config.ts

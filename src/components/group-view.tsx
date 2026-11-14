@@ -10,6 +10,7 @@ import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PushButton } from "@/components/push-button";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
@@ -44,7 +45,7 @@ export function GroupView({ id }: { id: string }) {
   if (!me.user) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-        <h1 className="text-2xl font-bold">로그인하고 입장해요</h1>
+        <h1 className="text-[28px]">로그인하고 입장해요</h1>
         <AuthForm onDone={reload} />
       </main>
     );
@@ -266,6 +267,8 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
             </Button>
           </div>
         )}
+
+        <PushButton groupId={id} memberId={me.id} />
 
         <p role="status" className="sr-only">
           {poked ? `${poked.from}님이 찔렀어요` : ""}
