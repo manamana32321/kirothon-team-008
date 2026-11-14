@@ -199,8 +199,8 @@ public class AlarmWatchService extends Service {
         sub.setGravity(Gravity.CENTER);
         sub.setPadding(0, 32, 0, 64);
 
-        Button go = actionButton("간다", "#22D3EE");
-        Button skip = actionButton("못 간다", "#EC4899");
+        Button go = actionButton("Go", "#22D3EE");
+        Button skip = actionButton("No Go", "#EC4899");
         go.setOnClickListener(v -> respond(groupId, memberId, "going", go, skip));
         skip.setOnClickListener(v -> respond(groupId, memberId, "skipping", go, skip));
 
@@ -250,7 +250,7 @@ public class AlarmWatchService extends Service {
                 String cookie = CookieManager.getInstance().getCookie(BASE);
                 String body = "{\"memberId\":\"" + memberId + "\",\"choice\":\"" + choice + "\"}";
                 int code = request("POST", "/api/groups/" + groupId + "/respond", cookie, body).code;
-                if (code == 201 || code == 409) {
+                if (code == 200 || code == 201 || code == 409) {
                     main.post(this::hideOverlay);
                     return;
                 }

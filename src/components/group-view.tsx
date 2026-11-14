@@ -69,9 +69,10 @@ export function GroupView({ id }: { id: string }) {
 function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [audio, setAudio] = useState<AudioContext | null>(null);
+  const [soundReady, setSoundReady] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
+  const [myChoice, setMyChoice] = useState<"going" | "skipping" | null>(null);
   const [recording, setRecording] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [poked, setPoked] = useState<{ from: string; key: string; x?: number; y?: number } | null>(null);
@@ -115,18 +116,24 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   }, []);
 
   useEffect(() => {
-    const unlock = () => {
-      if (!pokeAudio.current) pokeAudio.current = new AudioContext();
-      pokeAudio.current.resume().catch(() => {});
+    const ctx = new AudioContext();
+    pokeAudio.current = ctx;
+    const sync = () => setSoundReady(ctx.state === "running");
+    ctx.addEventListener("statechange", sync);
+    ctx.resume().catch(() => {});
+    const unlock = () => ctx.resume().catch(() => {});
+    window.addEventListener("pointerdown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      ctx.removeEventListener("statechange", sync);
+      ctx.close().catch(() => {});
     };
-    window.addEventListener("pointerdown", unlock, { once: true });
-    return () => window.removeEventListener("pointerdown", unlock);
   }, []);
 
   useEffect(() => {
     if (!poked) return;
     vibrate(POKE_VIBRATION);
-    const ctx = audio ?? pokeAudio.current;
+    const ctx = pokeAudio.current;
     if (ctx && ctx.state === "running") {
       POKE_TONES.forEach((freq, i) => {
         const at = ctx.currentTime + i * 0.12;
@@ -143,7 +150,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     }
     const timer = setTimeout(() => setPoked(null), POKE_FEEDBACK_MS);
     return () => clearTimeout(timer);
-  }, [poked, audio]);
+  }, [poked]);
 
   useEffect(() => {
     if (!sentNotice) return;
@@ -160,42 +167,45 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const me = group?.members.find((m) => m.id === memberId);
   const responded = respondedLocal || me?.status === "going" || me?.status === "skipping";
   const ringing = !!group && !!me && shouldRing(now, group.alarmTime, responded);
+  const currentChoice =
+    myChoice ?? (me?.status === "going" || me?.status === "skipping" ? me.status : null);
   const anyClipSound = !!group?.members.some((m) => m.id !== memberId && m.clip);
 
   useEffect(() => {
-    if (!ringing || anyClipSound || !audio) return;
+    const ctx = pokeAudio.current;
+    if (!ringing || anyClipSound || !soundReady || !ctx) return;
     const beep = () => {
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.frequency.value = 880;
       gain.gain.value = 0.2;
-      osc.connect(gain).connect(audio.destination);
+      osc.connect(gain).connect(ctx.destination);
       osc.start();
-      osc.stop(audio.currentTime + 0.4);
+      osc.stop(ctx.currentTime + 0.4);
     };
     beep();
     const timer = setInterval(beep, 1000);
     return () => clearInterval(timer);
-  }, [ringing, anyClipSound, audio]);
+  }, [ringing, anyClipSound, soundReady]);
 
   if (loadError) return <p className="p-6">{loadError}</p>;
   if (!group) return <p className="p-6">불러오는 중</p>;
 
   if (!me) return <p className="p-6">불러오는 중</p>;
 
-  async function armAlarm() {
-    const ctx = new AudioContext();
-    await ctx.resume();
-    setAudio(ctx);
-  }
-
   async function respond(choice: "going" | "skipping") {
+    if (me?.status === choice) return;
+    setMyChoice(choice);
     const result = await send(`/api/groups/${id}/respond`, {
       method: "POST",
       json: { memberId: me!.id, choice },
     });
-    if (result.error === undefined || result.error.includes("이미")) setRespondedLocal(true);
+    if (result.error !== undefined) {
+      setMyChoice(null);
+      setSentNotice(result.error);
+    } else setRespondedLocal(true);
     await load();
+    setMyChoice(null);
   }
 
   function poke() {
@@ -275,9 +285,9 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
               <p className="text-muted-foreground text-xs">{ringing ? "알람 울리는 중" : "매일 알람"}</p>
               <p className="font-heading text-[44px] leading-none tabular-nums">{group.alarmTime}</p>
             </div>
-            <Button onClick={armAlarm} disabled={audio !== null} size="lg" variant="outline">
-              {audio ? "알람 켜짐" : "알람 켜기"}
-            </Button>
+            {ringing && !soundReady && (
+              <p className="text-muted-foreground max-w-[9rem] text-right text-xs">화면을 한 번 누르면 소리가 나요</p>
+            )}
           </div>
         )}
 
@@ -316,7 +326,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
                   {group.penalties.map((p) => (
                     <p key={`${p.memberId}-${p.date}`} className="flex justify-between">
                       <span>
-                        {p.date} {p.nickname} · {p.reason === "skipping" ? "못 간다" : "무응답"}
+                        {p.date} {p.nickname} · {p.reason === "skipping" ? "No Go" : "무응답"}
                       </span>
                       <span className="tabular-nums">-{p.points}P</span>
                     </p>
@@ -328,15 +338,27 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         </Tabs>
       </main>
 
-      <div className="bg-background fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-foreground">
+      <div className="bg-background fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-foreground pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 p-4">
-          {ringing && (
+          {group.alarmTime !== null && (
             <div className="grid grid-cols-2 gap-2">
-              <Button size="lg" className="h-14 text-lg" onClick={() => respond("going")}>
-                간다
+              <Button
+                size="lg"
+                variant={currentChoice === "going" ? "default" : "outline"}
+                aria-pressed={currentChoice === "going"}
+                className={ringing ? "h-14 text-lg" : "h-11"}
+                onClick={() => respond("going")}
+              >
+                Go
               </Button>
-              <Button size="lg" variant="secondary" className="h-14 text-lg" onClick={() => respond("skipping")}>
-                못 간다
+              <Button
+                size="lg"
+                variant={currentChoice === "skipping" ? "secondary" : "outline"}
+                aria-pressed={currentChoice === "skipping"}
+                className={ringing ? "h-14 text-lg" : "h-11"}
+                onClick={() => respond("skipping")}
+              >
+                No Go
               </Button>
             </div>
           )}
@@ -373,7 +395,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
               disabled={selected.size === 0}
               onClick={poke}
             >
-              {selected.size > 0 ? `찌르기 (${selected.size}명)` : "친구를 골라 찌르기"}
+              {selected.size > 0 ? `찌르기 (${selected.size}명)` : "찌르기"}
             </Button>
           </div>
         </div>

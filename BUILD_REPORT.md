@@ -22,6 +22,7 @@
 | 구현 | Spec (gymcall R4·R5, design 화면·찌르기 갱신) | 그룹 홈을 셋로그식 카드 그리드로 다시 짬. 카드마다 멤버의 최근 클립 무음 반복, 다른 멤버 카드 토글 선택 → 하단 "찌르기"(`POST /poke`, 여러 명), 내 카드는 "클립 만들기" 오버레이. 별도 알람 화면을 없애고 알람 중엔 잔잔한 파장 + 다른 멤버 클립 소리, 찔리면 강한 파장과 흔들림. 클립 받는 사람 지정 제거(마이그레이션). PR #16의 전체 화면 호출은 찌르기로 합침. curl로 클립 201, 찌르기 400·404·201, `lastPoke` 반영, SSE `poke.sent` 확인 | `src/components/member-card.tsx`, `src/components/group-view.tsx`, `src/app/api/groups/[id]/poke/`, `src/app/globals.css` |
 | 기획 | Kiro 에이전트 자연어 분석 | 문제 근거: 실제 카톡 3개월치 아침 메시지 340줄을 에이전트가 직접 읽고 분류(정규식은 철자가 제각각이라 놓침). 원문은 레포에 넣지 않고 숫자만 기록 | `README.md` 근거 절 |
 | 기타 | Spec (tasks 9) + Steering | README를 템플릿 섹션 전부 채움. 기능별 코드 위치, 사용 시나리오, 설계 목표 표, 한계, 설치·실행·테스트 명령. 문서에 적은 경로 28개가 실제로 있는지 스크립트로 확인 | `README.md` |
+| 구현 | Spec (gymcall R3 갱신) + Steering | 사용자 피드백 5건 한 번에 반영: "알람 켜기" 버튼 제거(앱은 WebView 자동 재생, 브라우저는 첫 터치), Go/No Go 응답을 그날 안에 바꿀 수 있게 하고 No Go→Go면 차감 환불, 문구 Go/No Go·찌르기, 안드로이드 하단 시스템 바 가림(WindowInsets 마진). curl로 201→200→차감→환불 확인 | `src/app/api/groups/[id]/respond/route.ts`, `src/lib/penalty-store.ts`, `android-app/.../MainActivity.java` |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
 | 기타 | Steering | 이름과 아이콘 정의: 영어 Gymcall, 한국어 운동기, 아이콘 ㅇㄷㄱ | `.kiro/steering/product.md`, `src/app/icon.svg` |
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
