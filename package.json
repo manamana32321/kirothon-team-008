@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
+    "mock:seed": "tsx scripts/mock.ts seed",
+    "mock:poke": "tsx scripts/mock.ts poke",
     "db:migrate": "mkdir -p data && prisma migrate dev",
     "postinstall": "prisma generate"
   },
