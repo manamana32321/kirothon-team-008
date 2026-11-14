@@ -3,15 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlarmOverlay } from "@/components/alarm-overlay";
 import { ClipRecorder } from "@/components/clip-recorder";
+import { MeetupTab } from "@/components/meetup-tab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { AttendanceStatus } from "@/lib/attendance";
 import type { GroupEvent } from "@/lib/events";
 import { type GroupState, memberKey } from "@/lib/group-state";
+import { useLocationSharing } from "@/lib/use-location-sharing";
 
 const EVENTS: GroupEvent[] = ["group.updated", "response.created", "clip.created", "penalty.applied"];
 
@@ -21,6 +24,8 @@ const STATUS: Record<AttendanceStatus, { label: string; variant: "default" | "se
   skipping: { label: "못 간다", variant: "secondary" },
   no_response: { label: "무응답", variant: "destructive" },
 };
+
+const ARRIVED = { label: "도착", variant: "default" } as const;
 
 function inMinutes(minutes: number) {
   const d = new Date(Date.now() + minutes * 60_000);
@@ -37,6 +42,8 @@ export function GroupView({ id }: { id: string }) {
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
   const [target, setTarget] = useState<{ id: string; nickname: string } | null>(null);
+  const [locationVersion, setLocationVersion] = useState(0);
+  const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
@@ -48,7 +55,11 @@ export function GroupView({ id }: { id: string }) {
     const source = new EventSource(`/api/groups/${id}/events`);
     const reload = () => load();
     EVENTS.forEach((e) => source.addEventListener(e, reload));
-    source.onopen = reload;
+    source.addEventListener("location.updated", () => setLocationVersion((v) => v + 1));
+    source.onopen = () => {
+      reload();
+      setLocationVersion((v) => v + 1);
+    };
     return () => source.close();
   }, [id, load]);
 
@@ -121,50 +132,67 @@ export function GroupView({ id }: { id: string }) {
         </p>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>오늘 ({group.date})</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col divide-y">
-          {group.members.map((m) => {
-            const s = STATUS[m.status];
-            const canWake = m.id !== me.id && (m.status === "pending" || m.status === "no_response");
-            return (
-              <div key={m.id} className="flex items-center gap-2 py-2">
-                <span className="flex-1 font-medium">
-                  {m.nickname}
-                  {m.id === me.id && <span className="text-muted-foreground"> (나)</span>}
-                </span>
-                <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
-                <Badge variant={s.variant}>{s.label}</Badge>
-                {canWake && (
-                  <Button size="sm" variant="outline" onClick={() => setTarget({ id: m.id, nickname: m.nickname })}>
-                    깨우기
-                  </Button>
-                )}
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="status">
+        <TabsList className="w-full">
+          <TabsTrigger value="status">현황</TabsTrigger>
+          <TabsTrigger value="map">지도{sharing.on ? " · 공유 중" : ""}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="status" className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>오늘 ({group.date})</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col divide-y">
+              {group.members.map((m) => {
+                const s = m.source === "auto" ? ARRIVED : STATUS[m.status];
+                const canWake = m.id !== me.id && (m.status === "pending" || m.status === "no_response");
+                return (
+                  <div key={m.id} className="flex items-center gap-2 py-2">
+                    <span className="flex-1 font-medium">
+                      {m.nickname}
+                      {m.id === me.id && <span className="text-muted-foreground"> (나)</span>}
+                    </span>
+                    <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
+                    <Badge variant={s.variant}>{s.label}</Badge>
+                    {canWake && (
+                      <Button size="sm" variant="outline" onClick={() => setTarget({ id: m.id, nickname: m.nickname })}>
+                        깨우기
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>벌금 장부</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1 text-sm">
-          <p className="text-muted-foreground text-xs">가상 포인트예요. 실제 결제가 아니에요.</p>
-          {group.penalties.length === 0 && <p className="text-muted-foreground">아직 차감이 없어요.</p>}
-          {group.penalties.map((p) => (
-            <p key={`${p.memberId}-${p.date}`} className="flex justify-between">
-              <span>
-                {p.date} {p.nickname} · {p.reason === "skipping" ? "못 간다" : "무응답"}
-              </span>
-              <span className="tabular-nums">-{p.points}P</span>
-            </p>
-          ))}
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>벌금 장부</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1 text-sm">
+              <p className="text-muted-foreground text-xs">가상 포인트예요. 실제 결제가 아니에요.</p>
+              {group.penalties.length === 0 && <p className="text-muted-foreground">아직 차감이 없어요.</p>}
+              {group.penalties.map((p) => (
+                <p key={`${p.memberId}-${p.date}`} className="flex justify-between">
+                  <span>
+                    {p.date} {p.nickname} · {p.reason === "skipping" ? "못 간다" : "무응답"}
+                  </span>
+                  <span className="tabular-nums">-{p.points}P</span>
+                </p>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="map">
+          <MeetupTab
+            group={group}
+            meId={me.id}
+            now={now}
+            locationVersion={locationVersion}
+            sharing={sharing}
+          />
+        </TabsContent>
+      </Tabs>
 
       {target && (
         <ClipRecorder groupId={id} fromMemberId={me.id} to={target} onClose={() => setTarget(null)} />

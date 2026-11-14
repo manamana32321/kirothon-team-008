@@ -24,16 +24,16 @@
   - [x] 3.3 `GET /api/groups/:id/locations`. `GET /api/groups/:id`에 `meetup`과 멤버별 `source` 추가. `events.ts`에 `location.updated` 추가.
     - _Requirements: 8.4, 8.5, 10.4_
 
-- [ ] 4. 화면 (3 이후)
-  - [ ] 4.1 `/g/[id]`에 "현황" / "지도" 탭. `react-leaflet`을 `next/dynamic`, `ssr: false`로 로드. OSM 출처 표시.
+- [x] 4. 화면 (3 이후)
+  - [x] 4.1 `/g/[id]`에 "현황" / "지도" 탭. `react-leaflet`을 `next/dynamic`, `ssr: false`로 로드. OSM 출처 표시.
     - _Requirements: 8.1, 8.3, 8.6, N6_
-  - [ ] 4.2 멤버 마커와 흐림 표시, 공유 안 함 목록, SSE 신호 후 2초 묶음 재조회.
+  - [x] 4.2 멤버 마커와 흐림 표시, 공유 안 함 목록, SSE 신호 후 2초 묶음 재조회.
     - _Requirements: 8.2, 8.4, 8.5_
-  - [ ] 4.3 모임 장소 지정(지도 누르기, 반경 선택).
+  - [x] 4.3 모임 장소 지정(지도 누르기, 반경 선택).
     - _Requirements: 9.1, 9.2, 9.4_
-  - [ ] 4.4 "위치 공유" 스위치: 권한 거부 안내, 시간대 밖 안내, 10초 묶음 전송, 끄면 DELETE.
+  - [x] 4.4 "위치 공유" 스위치: 권한 거부 안내, 시간대 밖 안내, 10초 묶음 전송, 끄면 DELETE.
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, N8_
-  - [ ] 4.5 현황 탭에서 `source`가 auto면 "도착"으로 표시.
+  - [x] 4.5 현황 탭에서 `source`가 auto면 "도착"으로 표시.
     - _Requirements: 10.4_
 
 - [ ] 5. 검증 (4 이후)
