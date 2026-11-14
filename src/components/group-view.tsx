@@ -25,7 +25,7 @@ const EVENTS: GroupEvent[] = [
 ];
 
 const POKE_FEEDBACK_MS = 2_700;
-const STREAK_WINDOW_MS = 2_000;
+const STREAK_WINDOW_MS = 10_000;
 
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
