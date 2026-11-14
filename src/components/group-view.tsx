@@ -220,23 +220,23 @@ export function GroupView({ id }: { id: string }) {
         </header>
 
         {group.alarmTime === null ? (
-          <Link href={`/g/${id}/settings`} className="bg-muted rounded-lg p-4 text-center font-medium">
+          <Link href={`/g/${id}/settings`} className="bg-muted rounded-(--radius) border-[3px] border-foreground p-4 text-center font-medium">
             모임 시간을 정해 주세요
           </Link>
         ) : (
-          <div className="bg-background/80 flex items-center justify-between gap-3 rounded-lg border p-4 backdrop-blur">
+          <div className="bg-secondary flex -skew-x-[8deg] items-center justify-between gap-3 rounded-(--radius) border-[3px] border-foreground p-4 shadow-[3px_3px_0_var(--foreground)]">
             <div>
               <p className="text-muted-foreground text-xs">{ringing ? "알람 울리는 중" : "매일 알람"}</p>
-              <p className="text-3xl font-bold tabular-nums">{group.alarmTime}</p>
+              <p className="font-heading text-[44px] leading-none tabular-nums">{group.alarmTime}</p>
             </div>
-            <Button onClick={armAlarm} disabled={audio !== null} size="lg">
+            <Button onClick={armAlarm} disabled={audio !== null} size="lg" variant="outline">
               {audio ? "알람 켜짐" : "알람 켜기"}
             </Button>
           </div>
         )}
 
         {poked && (
-          <p role="status" className="bg-primary text-primary-foreground rounded-lg p-3 text-center font-semibold">
+          <p role="status" className="bg-primary text-primary-foreground rounded-(--radius) border-[3px] border-foreground p-3 text-center font-semibold">
             {poked.from}님이 찔렀어요
           </p>
         )}
@@ -294,7 +294,7 @@ export function GroupView({ id }: { id: string }) {
         </Tabs>
       </main>
 
-      <div className="bg-background/90 fixed inset-x-0 bottom-0 z-20 border-t backdrop-blur">
+      <div className="bg-background fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-foreground">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 p-4">
           {ringing && (
             <div className="grid grid-cols-2 gap-2">
@@ -333,7 +333,7 @@ export function GroupView({ id }: { id: string }) {
             <Button
               size="lg"
               variant={ringing ? "outline" : "default"}
-              className={`h-12 w-full text-base transition-transform active:scale-95 ${
+              className={`h-12 w-full -skew-x-[8deg] text-base shadow-[4px_4px_0_var(--foreground)] transition-transform active:scale-95 ${
                 bump === 0 ? "" : bump % 2 ? "poke-bump-a" : "poke-bump-b"
               }`}
               disabled={selected.size === 0}
