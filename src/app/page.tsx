@@ -54,20 +54,33 @@ export default function Home() {
             </Button>
           </div>
 
-          {me.groups.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>내 그룹</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2">
-                {me.groups.map((g) => (
-                  <Link key={g.groupId} href={`/g/${g.groupId}`} className="rounded-md border p-3">
-                    {g.name}
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>내 그룹</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {me.groups.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  아직 그룹이 없어요. 아래에서 만들거나 코드로 참여해요.
+                </p>
+              )}
+              {me.groups.map((g) => (
+                <Link
+                  key={g.groupId}
+                  href={`/g/${g.groupId}`}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{g.name}</span>
+                    <span className="text-muted-foreground text-sm">
+                      멤버 {g.memberCount}명 · {g.alarmTime ? `알람 ${g.alarmTime}` : "알람 없음"}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground">›</span>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
