@@ -28,3 +28,15 @@ export async function recordAbsences(
   if (created > 0) publish(groupId, "penalty.applied");
   return created;
 }
+
+export async function refundSkipping(groupId: string, memberId: string, date: string): Promise<boolean> {
+  const refunded = await db.$transaction(async (tx) => {
+    const log = await tx.penaltyLog.findUnique({ where: { memberId_date: { memberId, date } } });
+    if (!log || log.reason !== "skipping") return false;
+    await tx.penaltyLog.delete({ where: { id: log.id } });
+    await tx.member.update({ where: { id: memberId }, data: { points: { increment: log.points } } });
+    return true;
+  });
+  if (refunded) publish(groupId, "penalty.applied");
+  return refunded;
+}

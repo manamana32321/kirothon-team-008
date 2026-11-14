@@ -30,7 +30,7 @@ async function tick() {
     targets.forEach((id) => sent.add(id));
     await sendPush(targets, {
       title: "운동기 알람",
-      body: `${group.name} 운동 시간이에요. 간다/안간다를 눌러 주세요.`,
+      body: `${group.name} 운동 시간이에요. Go / No Go를 눌러 주세요.`,
       url: `/g/${group.id}`,
     });
   }

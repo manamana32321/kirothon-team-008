@@ -11,8 +11,8 @@ type Member = GroupState["members"][number];
 
 const STATUS: Record<AttendanceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "응답 전", variant: "outline" },
-  going: { label: "간다", variant: "default" },
-  skipping: { label: "못 간다", variant: "secondary" },
+  going: { label: "Go", variant: "default" },
+  skipping: { label: "No Go", variant: "secondary" },
   no_response: { label: "무응답", variant: "destructive" },
 };
 

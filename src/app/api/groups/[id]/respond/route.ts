@@ -3,7 +3,7 @@ import { requireMember } from "@/lib/auth";
 import { dateKey } from "@/lib/alarm";
 import { publish } from "@/lib/events";
 import { error, isUniqueViolation, parseJson } from "@/lib/http";
-import { recordAbsences } from "@/lib/penalty-store";
+import { recordAbsences, refundSkipping } from "@/lib/penalty-store";
 import { respondSchema } from "@/lib/schemas";
 
 export async function POST(
@@ -24,11 +24,21 @@ export async function POST(
   if (!member) return error(404, "그룹에 없는 멤버입니다");
 
   const date = dateKey(new Date());
-  try {
-    await db.response.create({ data: { memberId, date, choice } });
-  } catch (e) {
-    if (isUniqueViolation(e)) return error(409, "오늘은 이미 응답했습니다");
-    throw e;
+  const existing = await db.response.findUnique({ where: { memberId_date: { memberId, date } } });
+  if (existing?.choice === choice) return Response.json({ date, choice });
+
+  if (existing) {
+    await db.response.update({
+      where: { id: existing.id },
+      data: { choice, source: "manual" },
+    });
+  } else {
+    try {
+      await db.response.create({ data: { memberId, date, choice } });
+    } catch (e) {
+      if (isUniqueViolation(e)) return error(409, "응답을 저장하는 중 충돌이 났어요. 다시 눌러 주세요");
+      throw e;
+    }
   }
 
   publish(id, "response.created");
@@ -36,6 +46,8 @@ export async function POST(
     await recordAbsences(id, member.group.penaltyPoints, [
       { memberId, date, reason: "skipping" },
     ]);
+  } else {
+    await refundSkipping(id, memberId, date);
   }
-  return Response.json({ date, choice }, { status: 201 });
+  return Response.json({ date, choice }, { status: existing ? 200 : 201 });
 }
