@@ -7,8 +7,12 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -17,6 +21,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.Gravity;
@@ -24,6 +29,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -49,6 +55,43 @@ public class AlarmWatchService extends Service {
     private static final String BASE = "https://gymcall.json-server.win";
     private static final String CHANNEL = "alarm_watch";
     private static final int POLL_SECONDS = 10;
+    private static final String BACKGROUND = "#E3FFF6";
+    private static final String FOREGROUND = "#0D3B35";
+    private static final String PRIMARY = "#FF4FA3";
+    private static final String SECONDARY = "#FFE14D";
+
+    private static final class RippleView extends View {
+        private static final long PERIOD_MS = 3000;
+        private static final long[] DELAYS_MS = {0, 150};
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final long start = SystemClock.uptimeMillis();
+        private final float density;
+
+        RippleView(Context context) {
+            super(context);
+            density = context.getResources().getDisplayMetrics().density;
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(3 * density);
+            paint.setColor(Color.parseColor(PRIMARY));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float cx = getWidth() * 0.5f;
+            float cy = getHeight() * 0.2f;
+            float base = 40 * density;
+            long now = SystemClock.uptimeMillis() - start;
+            for (long delay : DELAYS_MS) {
+                long t = now - delay;
+                if (t < 0) continue;
+                float p = (t % PERIOD_MS) / (float) PERIOD_MS;
+                float eased = 1 - (1 - p) * (1 - p);
+                paint.setAlpha((int) (255 * (1 - eased)));
+                canvas.drawCircle(cx, cy, base * (1 + 8 * eased), paint);
+            }
+            postInvalidateOnAnimation();
+        }
+    }
     private static final long[] POKE_PATTERN = {0, 120, 60, 120, 60, 240};
 
     static volatile boolean appVisible = false;
@@ -184,23 +227,23 @@ public class AlarmWatchService extends Service {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER);
         root.setPadding(64, 64, 64, 64);
-        root.setBackgroundColor(Color.parseColor("#F01E0B3A"));
 
         TextView title = new TextView(this);
         title.setText("운동기 알람");
-        title.setTextColor(Color.WHITE);
+        title.setTextColor(Color.parseColor(FOREGROUND));
         title.setTextSize(36);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
 
         TextView sub = new TextView(this);
         sub.setText(groupName + "\n오늘 운동 가는지 정해야 화면이 풀려요");
-        sub.setTextColor(Color.parseColor("#FDE047"));
+        sub.setTextColor(Color.parseColor(FOREGROUND));
         sub.setTextSize(18);
         sub.setGravity(Gravity.CENTER);
         sub.setPadding(0, 32, 0, 64);
 
-        Button go = actionButton("Go", "#22D3EE");
-        Button skip = actionButton("No Go", "#EC4899");
+        Button go = actionButton("Go", PRIMARY, "#FFFFFF");
+        Button skip = actionButton("No Go", SECONDARY, FOREGROUND);
         go.setOnClickListener(v -> respond(groupId, memberId, "going", go, skip));
         skip.setOnClickListener(v -> respond(groupId, memberId, "skipping", go, skip));
 
@@ -208,6 +251,13 @@ public class AlarmWatchService extends Service {
         root.addView(sub);
         root.addView(go);
         root.addView(skip);
+
+        FrameLayout frame = new FrameLayout(this);
+        frame.setBackgroundColor(Color.parseColor(BACKGROUND));
+        frame.addView(new RippleView(this), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        frame.addView(root, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
         int type = Build.VERSION.SDK_INT >= 26
                 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -221,20 +271,25 @@ public class AlarmWatchService extends Service {
                         | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT);
         try {
-            windowManager.addView(root, lp);
+            windowManager.addView(frame, lp);
         } catch (Exception e) {
             return;
         }
-        overlay = root;
+        overlay = frame;
         startAlarmSound();
     }
 
-    private Button actionButton(String label, String color) {
+    private Button actionButton(String label, String color, String textColor) {
         Button b = new Button(this);
         b.setText(label);
         b.setTextSize(22);
-        b.setTextColor(Color.parseColor("#0B1020"));
-        b.setBackgroundColor(Color.parseColor(color));
+        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setTextColor(Color.parseColor(textColor));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.parseColor(color));
+        bg.setCornerRadius(48);
+        bg.setStroke(6, Color.parseColor(FOREGROUND));
+        b.setBackground(bg);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 180);
         lp.setMargins(0, 16, 0, 16);
