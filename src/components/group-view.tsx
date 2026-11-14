@@ -159,7 +159,6 @@ export function GroupView({ id }: { id: string }) {
     if (result.error !== undefined) return setSentNotice(result.error);
     setStreak((s) => s + 1);
     setBump((n) => n + 1);
-    setSentNotice(`${toMemberIds.length}명을 찔렀어요`);
   }
 
   function toggle(memberId: string) {
