@@ -3,18 +3,19 @@
 import { Flame, Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AuthForm } from "@/components/auth-form";
 import { ClipRecorder } from "@/components/clip-recorder";
 import { MeetupTab } from "@/components/meetup-tab";
 import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
-import { type GroupState, LAST_GROUP_KEY, memberKey } from "@/lib/group-state";
+import type { GroupState } from "@/lib/group-state";
 import { useLocationSharing } from "@/lib/use-location-sharing";
+import { useMe } from "@/lib/use-me";
 
 const EVENTS: GroupEvent[] = [
   "group.updated",
@@ -38,9 +39,13 @@ function streakTier(streak: number) {
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [memberId, setMemberId] = useState<string | null | undefined>(() =>
-    typeof window === "undefined" ? undefined : localStorage.getItem(memberKey(id)),
-  );
+  const { me: auth, reload: reloadAuth } = useMe();
+  const memberId =
+    auth === undefined
+      ? undefined
+      : auth.user
+        ? (auth.groups.find((g) => g.groupId === id)?.memberId ?? null)
+        : null;
   const [audio, setAudio] = useState<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
@@ -54,10 +59,6 @@ export function GroupView({ id }: { id: string }) {
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
-
-  useEffect(() => {
-    if (memberId) localStorage.setItem(LAST_GROUP_KEY, id);
-  }, [id, memberId]);
 
   useEffect(() => {
     memberIdRef.current = memberId;
@@ -135,18 +136,16 @@ export function GroupView({ id }: { id: string }) {
   if (loadError) return <p className="p-6">{loadError}</p>;
   if (!group || memberId === undefined) return <p className="p-6">불러오는 중</p>;
 
-  if (!me) {
+  if (!auth?.user) {
     return (
-      <JoinInline
-        group={group}
-        onJoined={(mid) => {
-          localStorage.setItem(memberKey(id), mid);
-          localStorage.setItem(LAST_GROUP_KEY, id);
-          setMemberId(mid);
-        }}
-      />
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
+        <h1 className="text-2xl font-bold">{group.name}</h1>
+        <AuthForm onDone={reloadAuth} />
+      </main>
     );
   }
+
+  if (!me) return <JoinInline group={group} onJoined={reloadAuth} />;
 
   async function armAlarm() {
     const ctx = new AudioContext();
@@ -355,28 +354,22 @@ export function GroupView({ id }: { id: string }) {
   );
 }
 
-function JoinInline({ group, onJoined }: { group: GroupState; onJoined: (memberId: string) => void }) {
-  const [nickname, setNickname] = useState("");
+function JoinInline({ group, onJoined }: { group: GroupState; onJoined: () => void }) {
   const [error, setError] = useState("");
 
   async function join() {
-    const result = await send<{ memberId: string }>("/api/groups/join", {
+    const result = await send("/api/groups/join", {
       method: "POST",
-      json: { inviteCode: group.inviteCode, nickname },
+      json: { inviteCode: group.inviteCode },
     });
     if (result.error !== undefined) return setError(result.error);
-    onJoined(result.data.memberId);
+    onJoined();
   }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
       <h1 className="text-2xl font-bold">{group.name}에 참여</h1>
-      <div className="flex gap-2">
-        <Input placeholder="내 닉네임" value={nickname} maxLength={20} onChange={(e) => setNickname(e.target.value)} />
-        <Button disabled={!nickname.trim()} onClick={join}>
-          참여
-        </Button>
-      </div>
+      <Button onClick={join}>참여</Button>
       {error && <p className="text-destructive text-sm">{error}</p>}
     </main>
   );

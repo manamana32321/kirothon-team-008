@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { requireMember } from "@/lib/auth";
 import { dateKey } from "@/lib/alarm";
 import { attendanceStatuses } from "@/lib/attendance";
 import { MIN_SEND_INTERVAL_SECONDS, SHARE_WINDOW_MINUTES } from "@/lib/config";
@@ -16,6 +17,8 @@ export async function POST(
   const input = await parseJson(request, locationSchema);
   if ("response" in input) return input.response;
   const { memberId, lat, lng, accuracyM } = input.data;
+  const owner = await requireMember(request, id, memberId);
+  if ("response" in owner) return owner.response;
 
   const now = new Date();
   const date = dateKey(now);
@@ -78,6 +81,8 @@ export async function DELETE(
   const { id } = await params;
   const input = await parseJson(request, memberRefSchema);
   if ("response" in input) return input.response;
+  const owner = await requireMember(request, id, input.data.memberId);
+  if ("response" in owner) return owner.response;
   if (removePosition(id, input.data.memberId)) publish(id, "location.updated");
   return new Response(null, { status: 204 });
 }

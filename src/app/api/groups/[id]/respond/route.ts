@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { requireMember } from "@/lib/auth";
 import { dateKey } from "@/lib/alarm";
 import { publish } from "@/lib/events";
 import { error, isUniqueViolation, parseJson } from "@/lib/http";
@@ -13,6 +14,8 @@ export async function POST(
   const input = await parseJson(request, respondSchema);
   if ("response" in input) return input.response;
   const { memberId, choice } = input.data;
+  const owner = await requireMember(request, id, memberId);
+  if ("response" in owner) return owner.response;
 
   const member = await db.member.findFirst({
     where: { id: memberId, groupId: id },

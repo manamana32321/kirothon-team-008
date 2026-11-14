@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { db } from "@/db";
+import { requireMember } from "@/lib/auth";
 import { CLIPS_DIR } from "@/lib/config";
 import { hasVideo } from "@/lib/clip";
 import { publish } from "@/lib/events";
@@ -31,8 +32,8 @@ export async function POST(
   }
   const { fromMemberId, mimeType } = parsed.data;
 
-  const member = await db.member.count({ where: { groupId: id, id: fromMemberId } });
-  if (member === 0) return error(404, "그룹에 없는 멤버입니다");
+  const owner = await requireMember(request, id, fromMemberId);
+  if ("response" in owner) return owner.response;
 
   const clip = await db.clip.create({
     data: {
