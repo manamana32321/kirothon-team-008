@@ -32,6 +32,8 @@ export const respondSchema = z.object({
   choice: z.enum(["going", "skipping"]),
 });
 
+export const resetSchema = z.object({ memberId: z.string().min(1) });
+
 export const clipMetaSchema = z.object({
   fromMemberId: z.string().min(1),
   mimeType: z.string().regex(/^(video|audio)\/[\w.+-]+(;.*)?$/),
