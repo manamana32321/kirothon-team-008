@@ -62,7 +62,7 @@
     - _Requirements: 4.2, 5.2, 6.2_
 
 - [ ] 8. 배포 (7 이후, 17시 이후)
-  - Dockerfile, `deploy/k8s/` 매니페스트(replicas 1, Recreate, PVC, TLS Ingress). `.kiro/steering/deploy.md`를 따른다.
+  - Dockerfile, `infra/k8s/` 매니페스트(replicas 1, Recreate, PVC, TLS Ingress). `.kiro/steering/deploy.md`를 따른다.
   - 실패하면 녹화 영상 링크로 대신한다.
   - _Requirements: N1_
 
