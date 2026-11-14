@@ -41,7 +41,7 @@
 
 - 운동 가냐고 물은 날의 절반 넘게(57%), 묻는 쪽은 10분 이상 답을 기다리거나 끝내 못 받는다. 기다리는 동안 집에서 나갈지 말지 정하지 못한다.
 - 답을 늦게 한 날은 대부분 이미 늦잠을 잔 날이었다. 알람이 혼자 끄는 것이라 친구가 깨울 방법이 카톡과 전화뿐이다.
-- 위치를 묻고 만날 곳을 맞추는 대화가 따로 생긴다. 모임 지도와 자동 출석 기능의 근거다.
+- 위치를 묻고 만날 곳을 맞추는 대화가 따로 생긴다.
 - 분류 기준: 철자와 상관없이 "오늘 운동 가?"를 묻는 메시지면 셌다. 이모티콘만 보낸 날과 점심 약속은 뺐다. 오전 11시 전에 상대 메시지가 없으면 무응답으로 봤다. 전화는 카톡 내보내기에 남지 않아 세지 못했다.
 
 ### 목표
@@ -62,7 +62,6 @@
 | 멤버 카드 그리드와 깨우기 클립 | 내 얼굴·목소리 10초 클립이 내 카드에서 반복. 알람이 울리는데 응답하지 않은 친구 화면에서는 여러 친구의 클립 소리가 한꺼번에 켜짐 | `src/components/member-card.tsx`, `src/components/clip-recorder.tsx`, `src/lib/clip.ts` |
 | 찌르기 (여러 명, 연타 배지) | 전화 대신. 카드를 골라 누르면 받은 친구 화면이 세게 출렁임 | `src/app/api/groups/[id]/poke/route.ts`, `src/components/group-view.tsx`, `src/app/globals.css` |
 | 무응답 자동 확정과 가상 벌금(선택) | 약속의 무게. 알람 10분 뒤 무응답이면 불참 확정, 포인트 차감(실제 결제 없음) | `src/lib/attendance.ts`, `src/lib/penalty.ts`, `src/lib/penalty-store.ts` |
-| 모임 지도와 자동 출석(선택) | "ㅇㄷ?(어디야)" 대신 알람 후 2시간만 위치 공유, 모임 장소 반경에 들어오면 "도착" | `src/lib/geo.ts`, `src/lib/meetup.ts`, `src/lib/locations.ts`, `src/components/meetup-tab.tsx` |
 | 모임 설정 화면 | 가끔 바꾸는 값(시간, 벌금, 장소, 초대)을 매일 보는 화면에서 분리 | `src/app/g/[id]/settings/page.tsx`, `src/components/group-settings.tsx` |
 
 ## 3. 사용 시나리오
