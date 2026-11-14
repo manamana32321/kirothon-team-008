@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Flame, Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClipRecorder } from "@/components/clip-recorder";
@@ -26,6 +26,14 @@ const EVENTS: GroupEvent[] = [
 
 const POKE_FEEDBACK_MS = 2_700;
 const STREAK_WINDOW_MS = 10_000;
+const STREAK_TIERS = [5, 10, 20] as const;
+
+function streakTier(streak: number) {
+  if (streak >= STREAK_TIERS[2]) return "streak-t4";
+  if (streak >= STREAK_TIERS[1]) return "streak-t3";
+  if (streak >= STREAK_TIERS[0]) return "streak-t2";
+  return "streak-t1";
+}
 
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
@@ -304,8 +312,9 @@ export function GroupView({ id }: { id: string }) {
               <span
                 key={`streak-${streak}`}
                 aria-live="polite"
-                className="streak-pop bg-destructive pointer-events-none absolute -top-3 -left-2 z-10 rounded-full px-2.5 py-0.5 text-sm font-black text-white tabular-nums shadow"
+                className={`streak-pop ${streakTier(streak)} pointer-events-none absolute -top-3 -left-2 z-10 flex items-center gap-0.5 rounded-full px-2.5 py-0.5 font-black text-white tabular-nums`}
               >
+                {streak >= STREAK_TIERS[1] && <Flame className="size-4" aria-hidden />}
                 {streak}연타
               </span>
             )}

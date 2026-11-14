@@ -267,12 +267,75 @@
   animation: streak-pop 0.3s ease-out;
 }
 
+.streak-t1 {
+  font-size: 0.875rem;
+  background: #dc2626;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+
+.streak-t2 {
+  font-size: 1rem;
+  background: linear-gradient(135deg, #f97316, #dc2626);
+  box-shadow: 0 0 10px rgb(249 115 22 / 0.7);
+}
+
+.streak-t3 {
+  font-size: 1.125rem;
+  background: linear-gradient(135deg, #facc15, #f97316, #dc2626);
+  box-shadow: 0 0 16px rgb(250 204 21 / 0.8);
+  animation:
+    streak-pop 0.3s ease-out,
+    streak-glow 0.8s ease-in-out 0.3s infinite alternate;
+}
+
+.streak-t4 {
+  font-size: 1.25rem;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
+  background-size: 300% 100%;
+  box-shadow:
+    0 0 20px rgb(168 85 247 / 0.8),
+    0 0 40px rgb(239 68 68 / 0.5);
+  animation:
+    streak-pop 0.3s ease-out,
+    streak-rainbow 1.2s linear infinite,
+    streak-wiggle 0.25s ease-in-out 0.3s infinite;
+}
+
+@keyframes streak-glow {
+  from {
+    filter: brightness(1);
+    transform: scale(1) rotate(-6deg);
+  }
+  to {
+    filter: brightness(1.25);
+    transform: scale(1.08) rotate(-6deg);
+  }
+}
+
+@keyframes streak-rainbow {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+@keyframes streak-wiggle {
+  0%,
+  100% {
+    transform: scale(1.05) rotate(-8deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(-3deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ripple-ring,
   .poke-shake,
   .poke-bump-a,
   .poke-bump-b,
-  .streak-pop {
+  .streak-pop,
+  .streak-t3,
+  .streak-t4 {
     animation: none !important;
   }
 }
