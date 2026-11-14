@@ -2,7 +2,8 @@ export type GroupEvent =
   | "group.updated"
   | "response.created"
   | "clip.created"
-  | "penalty.applied";
+  | "penalty.applied"
+  | "location.updated";
 
 type Listener = (event: GroupEvent) => void;
 

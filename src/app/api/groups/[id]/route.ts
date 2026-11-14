@@ -67,6 +67,10 @@ export async function GET(
     alarmTime: group.alarmTime,
     startPoints: group.startPoints,
     penaltyPoints: group.penaltyPoints,
+    meetup:
+      group.meetupLat === null || group.meetupLng === null
+        ? null
+        : { lat: group.meetupLat, lng: group.meetupLng, radiusM: group.meetupRadiusM },
     date,
     members: group.members.map((m) => {
       const clip = m.clipsReceived[0];
@@ -75,6 +79,7 @@ export async function GET(
         nickname: m.nickname,
         points: m.points,
         status: statuses[m.id],
+        source: (m.responses[0]?.source ?? null) as "manual" | "auto" | null,
         nextClip: clip
           ? {
               id: clip.id,

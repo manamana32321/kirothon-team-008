@@ -7,12 +7,14 @@ export type GroupState = {
   alarmTime: string | null;
   startPoints: number;
   penaltyPoints: number;
+  meetup: { lat: number; lng: number; radiusM: number } | null;
   date: string;
   members: {
     id: string;
     nickname: string;
     points: number;
     status: AttendanceStatus;
+    source: "manual" | "auto" | null;
     nextClip: { id: string; mimeType: string; hasVideo: boolean; fromNickname: string } | null;
   }[];
   penalties: {
