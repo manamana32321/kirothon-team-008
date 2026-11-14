@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "visual-check",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "bash .kiro/hooks/visual-check.sh"
+      }
+    }
+  ]
+}

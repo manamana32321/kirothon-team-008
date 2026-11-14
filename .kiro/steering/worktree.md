@@ -7,4 +7,5 @@
 - 머지 후 정리: `git worktree remove {경로}` 와 `git branch -d {브랜치}`.
 - `main`에는 직접 커밋과 push를 하지 않는다. 브랜치에서 작업하고 브랜치를 push한다.
 - PR은 에이전트가 만들고, 사용자가 GitHub에서 머지한다. 에이전트는 `main`에 push하지 않는다.
+- 화면(FE) 변경이 든 PR은 사용자가 직접 눈으로 본 뒤 머지한다. 에이전트는 `.kiro/skills/local-check-guide` 절차로 확인 안내를 보낸다. `visual-check` 훅이 이를 점검한다.
 - gitignore된 `.env`는 워크트리로 복사하되 커밋하지 않는다.

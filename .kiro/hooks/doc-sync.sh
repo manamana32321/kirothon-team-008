@@ -15,7 +15,7 @@ while IFS= read -r f; do
     NEWEST=$t
     NEWEST_FILE=$f
   fi
-done < <(find src prisma deploy tests Dockerfile package.json -type f 2>/dev/null)
+done < <(find src prisma infra tests Dockerfile package.json -type f 2>/dev/null)
 
 if [ "$NEWEST" -le "$REPORT_TIME" ]; then
   exit 0
