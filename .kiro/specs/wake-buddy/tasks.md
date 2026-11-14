@@ -2,7 +2,7 @@
 
 요구사항: `requirements.md`. 설계: `design.md`. 각 작업은 끝나면 `BUILD_REPORT.md`에 한 줄 남긴다.
 
-- [ ] 1. 프로젝트 골격
+- [x] 1. 프로젝트 골격
   - Next.js(App Router) + TypeScript + Tailwind + shadcn/ui를 pnpm으로 만든다.
   - Prisma + SQLite, Zod, Vitest를 추가한다.
   - `.gitignore`에 `data/`, `.env`, `*.db`를 넣는다.

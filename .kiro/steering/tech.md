@@ -1,9 +1,10 @@
 # Tech
 
 ## 스택
-- 앱: Next.js (App Router) + TypeScript, API는 Route Handlers
-- UI: Tailwind CSS + shadcn/ui
-- DB: SQLite + Prisma (설치 없이 clone 후 바로 실행)
+- 앱: Next.js 16 (App Router) + TypeScript, API는 Route Handlers
+- UI: Tailwind CSS 4 + shadcn/ui
+- DB: SQLite + Prisma 7 (`@prisma/adapter-better-sqlite3`). 클라이언트는 `src/generated/prisma`에 생성되고 커밋하지 않는다. DB 경로 기본값은 `src/lib/config.ts` 한 곳에 둔다
+- 테스트: Vitest (`tests/**/*.test.ts`)
 - 검증: Zod
 - 패키지 매니저: pnpm
 - 실시간: Server-Sent Events (Route Handler, Node 런타임)
