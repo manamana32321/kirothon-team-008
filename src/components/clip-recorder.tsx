@@ -1,5 +1,6 @@
 "use client";
 
+import { Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { send } from "@/lib/api-client";
@@ -13,12 +14,10 @@ const MIC_HELP =
 export function ClipRecorder({
   groupId,
   fromMemberId,
-  to,
   onClose,
 }: {
   groupId: string;
   fromMemberId: string;
-  to: { id: string; nickname: string };
   onClose: () => void;
 }) {
   const [cameraOn, setCameraOn] = useState(true);
@@ -101,7 +100,6 @@ export function ClipRecorder({
     setSending(true);
     const form = new FormData();
     form.append("fromMemberId", fromMemberId);
-    form.append("toMemberId", to.id);
     form.append("file", blob, blob.type.startsWith("video/") ? "clip.webm" : "clip-audio.webm");
     const result = await send(`/api/groups/${groupId}/clips`, { method: "POST", body: form });
     setSending(false);
@@ -114,12 +112,17 @@ export function ClipRecorder({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
       <div className="bg-background text-foreground flex w-full max-w-sm flex-col gap-3 rounded-xl p-4">
-        <p className="font-semibold">{to.nickname}님 깨우기 클립</p>
+        <div>
+          <p className="font-semibold">내 깨우기 클립</p>
+          <p className="text-muted-foreground text-xs">
+            알람이 울리는데 아직 응답 안 한 친구 화면에서 이 클립이 소리 내며 반복돼요.
+          </p>
+        </div>
         <div className="bg-muted relative aspect-[3/4] overflow-hidden rounded-lg">
           {cameraOn ? (
             <video ref={previewRef} autoPlay muted playsInline className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-5xl">🎙️</div>
+            <div className="flex h-full items-center justify-center"><Mic className="text-muted-foreground size-12" aria-hidden /></div>
           )}
           {recording && (
             <span className="absolute top-2 right-2 rounded bg-red-600 px-2 py-0.5 text-sm text-white">

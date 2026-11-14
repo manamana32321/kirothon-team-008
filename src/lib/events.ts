@@ -4,8 +4,7 @@ export type GroupEvent =
   | "clip.created"
   | "penalty.applied"
   | "location.updated"
-  | "wake.called"
-  | "wake.acked";
+  | "poke.sent";
 
 type Listener = (event: GroupEvent) => void;
 

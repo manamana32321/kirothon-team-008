@@ -30,7 +30,6 @@ export const respondSchema = z.object({
 
 export const clipMetaSchema = z.object({
   fromMemberId: z.string().min(1),
-  toMemberId: z.string().min(1),
   mimeType: z.string().regex(/^(video|audio)\/[\w.+-]+(;.*)?$/),
   size: z.number().int().positive().max(MAX_CLIP_BYTES),
 });
@@ -51,9 +50,9 @@ export const locationSchema = z.object({
   accuracyM: z.number().min(0),
 });
 
-export const wakeSchema = z.object({
+export const pokeSchema = z.object({
   fromMemberId: z.string().min(1),
-  toMemberId: z.string().min(1),
+  toMemberIds: z.array(z.string().min(1)).min(1).max(50),
 });
 
 export const memberRefSchema = z.object({

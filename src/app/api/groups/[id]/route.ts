@@ -4,7 +4,6 @@ import { attendanceStatuses } from "@/lib/attendance";
 import type { GroupState } from "@/lib/group-state";
 import { error } from "@/lib/http";
 import { recordAbsences } from "@/lib/penalty-store";
-import { wakeExpiresAt, wakeStatus } from "@/lib/wake";
 
 async function loadGroup(id: string, date: string) {
   return db.group.findUnique({
@@ -14,15 +13,13 @@ async function loadGroup(id: string, date: string) {
         orderBy: { nickname: "asc" },
         include: {
           responses: { where: { date } },
-          clipsReceived: {
-            where: { usedDate: null },
-            orderBy: { createdAt: "asc" },
+          clipsSent: {
+            orderBy: { createdAt: "desc" },
             take: 1,
-            include: { fromMember: { select: { nickname: true } } },
           },
           wakeReceived: {
             orderBy: { createdAt: "desc" },
-            take: 20,
+            take: 1,
             include: { fromMember: { select: { nickname: true } } },
           },
         },
@@ -79,30 +76,17 @@ export async function GET(
         : { lat: group.meetupLat, lng: group.meetupLng, radiusM: group.meetupRadiusM },
     date,
     members: group.members.map((m) => {
-      const clip = m.clipsReceived[0];
-      const latest = m.wakeReceived[0];
+      const clip = m.clipsSent[0];
+      const poke = m.wakeReceived[0];
       return {
-        awake: m.wakeReceived.some((c) => c.ackedAt && dateKey(c.ackedAt) === date),
-        wake: latest
-          ? {
-              status: wakeStatus(latest, now),
-              fromMemberId: latest.fromMemberId,
-              fromNickname: latest.fromMember.nickname,
-              expiresAt: wakeExpiresAt(latest).toISOString(),
-            }
-          : null,
         id: m.id,
         nickname: m.nickname,
         points: m.points,
         status: statuses[m.id],
         source: (m.responses[0]?.source ?? null) as "manual" | "auto" | null,
-        nextClip: clip
-          ? {
-              id: clip.id,
-              mimeType: clip.mimeType,
-              hasVideo: clip.hasVideo,
-              fromNickname: clip.fromMember.nickname,
-            }
+        clip: clip ? { id: clip.id, mimeType: clip.mimeType, hasVideo: clip.hasVideo } : null,
+        lastPoke: poke
+          ? { at: poke.createdAt.toISOString(), fromNickname: poke.fromMember.nickname }
           : null,
       };
     }),

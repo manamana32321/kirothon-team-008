@@ -128,3 +128,91 @@
     @apply font-sans;
   }
 }
+
+@keyframes ripple-calm {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes ripple-strong {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes poke-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  20% {
+    transform: translate(-6px, 2px) rotate(-1.2deg);
+  }
+  40% {
+    transform: translate(6px, -2px) rotate(1.2deg);
+  }
+  60% {
+    transform: translate(-4px, 1px) rotate(-0.6deg);
+  }
+  80% {
+    transform: translate(4px, -1px) rotate(0.6deg);
+  }
+}
+
+.ripple-ring {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 160vmax;
+  height: 160vmax;
+  border-radius: 9999px;
+  border: 2px solid var(--primary);
+  opacity: 0;
+}
+
+.ripple-calm .ripple-ring {
+  animation: ripple-calm 4s ease-out infinite;
+}
+
+.ripple-calm .ripple-ring:nth-child(2) {
+  animation-delay: 1.33s;
+}
+
+.ripple-calm .ripple-ring:nth-child(3) {
+  animation-delay: 2.66s;
+}
+
+.ripple-strong .ripple-ring {
+  border-width: 10px;
+  animation: ripple-strong 0.9s ease-out infinite;
+}
+
+.ripple-strong .ripple-ring:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.ripple-strong .ripple-ring:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.poke-shake {
+  animation: poke-shake 0.45s ease-in-out 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ripple-ring,
+  .poke-shake {
+    animation: none !important;
+  }
+}

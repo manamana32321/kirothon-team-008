@@ -28,13 +28,6 @@ export async function POST(
     throw e;
   }
 
-  const clip = await db.clip.findFirst({
-    where: { toMemberId: memberId, usedDate: null },
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (clip) await db.clip.update({ where: { id: clip.id }, data: { usedDate: date } });
-
   publish(id, "response.created");
   if (choice === "skipping") {
     await recordAbsences(id, member.group.penaltyPoints, [
