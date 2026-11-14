@@ -23,27 +23,21 @@ export async function POST(
 
   const parsed = clipMetaSchema.safeParse({
     fromMemberId: form.get("fromMemberId"),
-    toMemberId: form.get("toMemberId"),
     mimeType: file.type,
     size: file.size,
   });
   if (!parsed.success) {
     return Response.json({ error: "입력 오류", issues: parsed.error.issues }, { status: 400 });
   }
-  const { fromMemberId, toMemberId, mimeType } = parsed.data;
+  const { fromMemberId, mimeType } = parsed.data;
 
-  const count = await db.member.count({
-    where: { groupId: id, id: { in: [fromMemberId, toMemberId] } },
-  });
-  if (count !== new Set([fromMemberId, toMemberId]).size) {
-    return error(404, "그룹에 없는 멤버입니다");
-  }
+  const member = await db.member.count({ where: { groupId: id, id: fromMemberId } });
+  if (member === 0) return error(404, "그룹에 없는 멤버입니다");
 
   const clip = await db.clip.create({
     data: {
       groupId: id,
       fromMemberId,
-      toMemberId,
       filePath: "",
       mimeType,
       hasVideo: hasVideo(mimeType),

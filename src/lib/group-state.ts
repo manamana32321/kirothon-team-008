@@ -1,5 +1,4 @@
 import type { AttendanceStatus } from "@/lib/attendance";
-import type { WakeStatus } from "@/lib/wake";
 
 export type GroupState = {
   id: string;
@@ -16,14 +15,8 @@ export type GroupState = {
     points: number;
     status: AttendanceStatus;
     source: "manual" | "auto" | null;
-    nextClip: { id: string; mimeType: string; hasVideo: boolean; fromNickname: string } | null;
-    awake: boolean;
-    wake: {
-      status: WakeStatus;
-      fromMemberId: string;
-      fromNickname: string;
-      expiresAt: string;
-    } | null;
+    clip: { id: string; mimeType: string; hasVideo: boolean } | null;
+    lastPoke: { at: string; fromNickname: string } | null;
   }[];
   penalties: {
     memberId: string;

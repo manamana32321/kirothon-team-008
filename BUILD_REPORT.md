@@ -19,6 +19,7 @@
 | 구현 | Spec (gymcall-meetup tasks 4) | 지도 화면: 현황/지도 탭, Leaflet + OSM(`next/dynamic` ssr 끔), 멤버 점과 60초 흐림, 공유 안 함 목록, 모임 장소 지정(지도 누르기, 50/100/200m), 위치 공유 스위치(권한 거부·시간대 밖 안내, 10초 묶음 전송, 끄거나 탭 닫으면 삭제), 자동 출석은 "도착"으로 표시. lint, tsc, build 통과 | `src/components/meetup-tab.tsx`, `src/components/meetup-map.tsx`, `src/lib/use-location-sharing.ts` |
 | 구현 | Spec (design 화면 원칙 갱신) | 모임 설정 화면 추가: 모임 시간, 벌금 켜기/끄기, 모임 장소 지정·삭제, 초대 QR(`qrcode.react`)과 코드·링크 복사. 그룹 화면은 알람 한 줄, 멤버 상태, 탭만 남김. `DELETE /meetup` 추가, 벌금 0이면 차감 기록 안 만듦. curl로 설정 페이지 200, 벌금 끔 상태에서 못 간다 응답 시 차감 0건, 장소 저장·삭제 확인 | `src/app/g/[id]/settings/`, `src/components/group-settings.tsx`, `.kiro/specs/gymcall/design.md` |
 | 구현 | Spec (gymcall-wakeup 1단계 작업 1-5) | 실시간 깨우기(SSE) 구현: `lib/wake.ts` 상태 계산(5분 만료), WakeCall 모델, 호출·확인 API, `wake.called/acked` 이벤트, 멤버별 `awake`와 `wake` 상태, 알람 오버레이 재사용("일어났다" 버튼 하나). 테스트 7개 추가(총 59개). curl로 자기 호출 400, 없는 멤버 404, 중복 호출 2건 확인 시 acked 2, 재확인 409, SSE 이벤트 2종 수신 확인 | `src/lib/wake.ts`, `src/app/api/groups/[id]/wake/`, `prisma/migrations/*_wake_call/`, `tests/wake.test.ts` |
+| 구현 | Spec (gymcall R4·R5, design 화면·찌르기 갱신) | 그룹 홈을 셋로그식 카드 그리드로 다시 짬. 카드마다 멤버의 최근 클립 무음 반복, 다른 멤버 카드 토글 선택 → 하단 "찌르기"(`POST /poke`, 여러 명), 내 카드는 "클립 만들기" 오버레이. 별도 알람 화면을 없애고 알람 중엔 잔잔한 파장 + 다른 멤버 클립 소리, 찔리면 강한 파장과 흔들림. 클립 받는 사람 지정 제거(마이그레이션). PR #16의 전체 화면 호출은 찌르기로 합침. curl로 클립 201, 찌르기 400·404·201, `lastPoke` 반영, SSE `poke.sent` 확인 | `src/components/member-card.tsx`, `src/components/group-view.tsx`, `src/app/api/groups/[id]/poke/`, `src/app/globals.css` |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
 | 기타 | Steering | 이름과 아이콘 정의: 영어 Gymcall, 한국어 운동기, 아이콘 ㅇㄷㄱ | `.kiro/steering/product.md`, `src/app/icon.svg` |
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
@@ -35,6 +36,7 @@
 - 앱 이름을 가칭 wake-buddy에서 짐콜(Gymcall)로 정했다. 한국어 이름은 운동기, 아이콘은 친구에게 보내던 카톡 "ㅇㄷㄱ?"에서 따왔다. 이유: 깨우기만이 아니라 같이 운동하러 부르는 것이 핵심이고, 원래 쓰던 우회 행동을 그대로 이름에 남긴다.
 - 매니페스트 폴더를 `deploy/k8s/`에서 `infra/k8s/`로 옮겼다. 이유: 기존 AMANG 레포와 같은 구조로 맞춘다.
 - 설정 화면 `/g/[id]/settings`를 따로 만들었다. 모임 시간, 벌금(선택), 모임 장소(선택), 초대 코드와 QR을 그리로 옮겼다. 이유: 매일 아침 보는 그룹 화면의 인지 부하를 줄인다. 벌금을 끄면 포인트와 장부도 그룹 화면에서 숨긴다.
+- 그룹 홈을 셋로그식 카드 그리드로 바꾸고 별도 알람 화면을 없앴다. 깨우기는 "찌르기" 하나로 합쳤다(PR #16의 전체 화면 호출, "일어났다" 제거). 클립은 받는 사람을 고르지 않고 내 카드에 건다. 이유: 아침에 한 화면에서 친구들 상태를 보고 바로 찌를 수 있게 하고, 알람 중에는 응답 안 한 사람에게 여러 친구 목소리가 함께 울리게 해서 일어날 압박을 키운다.
 - TWA/네이티브 대신 웹으로 정했다. 이유: TWA도 Chrome 엔진이라 백그라운드 알람과 자동 재생 제약이 같다.
 - LLM과 Bedrock을 뺐다. 이유: 비용과 키 관리 부담, 핵심 가치와 무관.
 - 벌금은 실제 결제 대신 가상 포인트 장부로 한정했다.

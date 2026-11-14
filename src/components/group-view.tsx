@@ -1,19 +1,17 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Flame, Settings } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { AlarmOverlay } from "@/components/alarm-overlay";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ClipRecorder } from "@/components/clip-recorder";
 import { MeetupTab } from "@/components/meetup-tab";
-import { Badge } from "@/components/ui/badge";
+import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
-import type { AttendanceStatus } from "@/lib/attendance";
 import type { GroupEvent } from "@/lib/events";
 import { type GroupState, memberKey } from "@/lib/group-state";
 import { useLocationSharing } from "@/lib/use-location-sharing";
@@ -23,18 +21,19 @@ const EVENTS: GroupEvent[] = [
   "response.created",
   "clip.created",
   "penalty.applied",
-  "wake.called",
-  "wake.acked",
+  "poke.sent",
 ];
 
-const STATUS: Record<AttendanceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "응답 전", variant: "outline" },
-  going: { label: "간다", variant: "default" },
-  skipping: { label: "못 간다", variant: "secondary" },
-  no_response: { label: "무응답", variant: "destructive" },
-};
+const POKE_FEEDBACK_MS = 2_700;
+const STREAK_WINDOW_MS = 10_000;
+const STREAK_TIERS = [5, 10, 20] as const;
 
-const ARRIVED = { label: "도착", variant: "default" } as const;
+function streakTier(streak: number) {
+  if (streak >= STREAK_TIERS[2]) return "streak-t4";
+  if (streak >= STREAK_TIERS[1]) return "streak-t3";
+  if (streak >= STREAK_TIERS[0]) return "streak-t2";
+  return "streak-t1";
+}
 
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
@@ -45,14 +44,32 @@ export function GroupView({ id }: { id: string }) {
   const [audio, setAudio] = useState<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
-  const [target, setTarget] = useState<{ id: string; nickname: string } | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
+  const [sentNotice, setSentNotice] = useState("");
+  const [bump, setBump] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [locationVersion, setLocationVersion] = useState(0);
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
+  const memberIdRef = useRef(memberId);
+  const seenPoke = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    memberIdRef.current = memberId;
+  }, [memberId]);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/groups/${id}`, { cache: "no-store" });
     if (!res.ok) return setLoadError("그룹을 찾을 수 없어요.");
-    setGroup(await res.json());
+    const next: GroupState = await res.json();
+    setGroup(next);
+    const mine = next.members.find((m) => m.id === memberIdRef.current)?.lastPoke ?? null;
+    const at = mine?.at ?? null;
+    if (seenPoke.current !== undefined && mine && at !== seenPoke.current) {
+      setPoked({ from: mine.fromNickname, key: mine.at });
+    }
+    seenPoke.current = at;
   }, [id]);
 
   useEffect(() => {
@@ -72,10 +89,48 @@ export function GroupView({ id }: { id: string }) {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!poked) return;
+    const timer = setTimeout(() => setPoked(null), POKE_FEEDBACK_MS);
+    return () => clearTimeout(timer);
+  }, [poked]);
+
+  useEffect(() => {
+    if (!sentNotice) return;
+    const timer = setTimeout(() => setSentNotice(""), 2_000);
+    return () => clearTimeout(timer);
+  }, [sentNotice]);
+
+  useEffect(() => {
+    if (streak === 0) return;
+    const timer = setTimeout(() => setStreak(0), STREAK_WINDOW_MS);
+    return () => clearTimeout(timer);
+  }, [streak, bump]);
+
+  const me = group?.members.find((m) => m.id === memberId);
+  const responded = respondedLocal || me?.status === "going" || me?.status === "skipping";
+  const ringing = !!group && !!me && shouldRing(now, group.alarmTime, responded);
+  const anyClipSound = !!group?.members.some((m) => m.id !== memberId && m.clip);
+
+  useEffect(() => {
+    if (!ringing || anyClipSound || !audio) return;
+    const beep = () => {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.frequency.value = 880;
+      gain.gain.value = 0.2;
+      osc.connect(gain).connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + 0.4);
+    };
+    beep();
+    const timer = setInterval(beep, 1000);
+    return () => clearInterval(timer);
+  }, [ringing, anyClipSound, audio]);
+
   if (loadError) return <p className="p-6">{loadError}</p>;
   if (!group || memberId === undefined) return <p className="p-6">불러오는 중</p>;
 
-  const me = group.members.find((m) => m.id === memberId);
   if (!me) {
     return (
       <JoinInline
@@ -86,23 +141,6 @@ export function GroupView({ id }: { id: string }) {
         }}
       />
     );
-  }
-
-  const responded = respondedLocal || me.status === "going" || me.status === "skipping";
-  const ringing = shouldRing(now, group.alarmTime, responded);
-  const wakeRinging = me.wake?.status === "calling" && now.getTime() < Date.parse(me.wake.expiresAt);
-
-  async function wakeUp(toMemberId: string) {
-    await send(`/api/groups/${id}/wake`, {
-      method: "POST",
-      json: { fromMemberId: me!.id, toMemberId },
-    });
-    await load();
-  }
-
-  async function awake() {
-    await send(`/api/groups/${id}/wake/ack`, { method: "POST", json: { memberId: me!.id } });
-    await load();
   }
 
   async function armAlarm() {
@@ -120,138 +158,195 @@ export function GroupView({ id }: { id: string }) {
     await load();
   }
 
+  function poke() {
+    const toMemberIds = [...selected];
+    setStreak((s) => s + 1);
+    setBump((n) => n + 1);
+    send(`/api/groups/${id}/poke`, {
+      method: "POST",
+      json: { fromMemberId: me!.id, toMemberIds },
+    }).then((result) => {
+      if (result.error === undefined) return;
+      setStreak((s) => Math.max(0, s - 1));
+      setSentNotice(result.error);
+    });
+  }
+
+  function toggle(memberId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(memberId)) next.delete(memberId);
+      else next.add(memberId);
+      return next;
+    });
+  }
+
   const penaltyOn = group.penaltyPoints > 0 || group.penalties.length > 0;
+  const rippleClass = poked ? "ripple-strong" : ringing ? "ripple-calm" : "";
+  const ordered = [me, ...group.members.filter((m) => m.id !== me.id)];
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-4">
-      <header className="flex items-start justify-between pt-4">
-        <div>
-          <p className="text-muted-foreground text-sm">운동기</p>
-          <h1 className="text-2xl font-bold">{group.name}</h1>
+    <>
+      {rippleClass && (
+        <div
+          key={poked?.key ?? "calm"}
+          className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${rippleClass}`}
+          aria-hidden
+        >
+          <span className="ripple-ring" />
+          <span className="ripple-ring" />
+          <span className="ripple-ring" />
         </div>
-        <Link
-          href={`/g/${id}/settings`}
-          aria-label="모임 설정"
-          title="모임 설정"
-          className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
-        >
-          <Settings className="size-5" />
-        </Link>
-      </header>
+      )}
 
-      {group.alarmTime === null ? (
-        <Link
-          href={`/g/${id}/settings`}
-          className="bg-muted rounded-lg p-4 text-center font-medium"
-        >
-          모임 시간을 정해 주세요
-        </Link>
-      ) : (
-        <div className="flex items-center justify-between gap-3 rounded-lg border p-4">
+      <main
+        className={`relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-4 pb-40 ${
+          poked ? "poke-shake" : ""
+        }`}
+      >
+        <header className="flex items-start justify-between pt-4">
           <div>
-            <p className="text-muted-foreground text-xs">매일 알람</p>
-            <p className="text-3xl font-bold tabular-nums">{group.alarmTime}</p>
+            <p className="text-muted-foreground text-sm">운동기</p>
+            <h1 className="text-2xl font-bold">{group.name}</h1>
           </div>
-          <Button onClick={armAlarm} disabled={audio !== null} size="lg">
-            {audio ? "알람 켜짐" : "알람 켜기"}
-          </Button>
-        </div>
-      )}
-      {group.alarmTime !== null && !audio && (
-        <p className="text-muted-foreground -mt-2 text-xs">알람은 이 탭이 열려 있을 때만 울려요.</p>
-      )}
+          <Link
+            href={`/g/${id}/settings`}
+            aria-label="모임 설정"
+            title="모임 설정"
+            className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
+          >
+            <Settings className="size-5" />
+          </Link>
+        </header>
 
-      {me.nextClip && !responded && (
-        <p className="bg-muted rounded-md p-3 text-sm">
-          {me.nextClip.fromNickname}님이 보낸 {me.nextClip.hasVideo ? "영상" : "음성"}이 다음 알람에 울려요.
-        </p>
-      )}
+        {group.alarmTime === null ? (
+          <Link href={`/g/${id}/settings`} className="bg-muted rounded-lg p-4 text-center font-medium">
+            모임 시간을 정해 주세요
+          </Link>
+        ) : (
+          <div className="bg-background/80 flex items-center justify-between gap-3 rounded-lg border p-4 backdrop-blur">
+            <div>
+              <p className="text-muted-foreground text-xs">{ringing ? "알람 울리는 중" : "매일 알람"}</p>
+              <p className="text-3xl font-bold tabular-nums">{group.alarmTime}</p>
+            </div>
+            <Button onClick={armAlarm} disabled={audio !== null} size="lg">
+              {audio ? "알람 켜짐" : "알람 켜기"}
+            </Button>
+          </div>
+        )}
 
-      <Tabs defaultValue="status">
-        <TabsList className="w-full">
-          <TabsTrigger value="status">현황</TabsTrigger>
-          <TabsTrigger value="map">지도{sharing.on ? " · 공유 중" : ""}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="status" className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>오늘 ({group.date})</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col divide-y">
-              {group.members.map((m) => {
-                const s = m.source === "auto" ? ARRIVED : STATUS[m.status];
-                const canWake = m.id !== me.id && (m.status === "pending" || m.status === "no_response");
-                const calling = m.wake?.status === "calling" && now.getTime() < Date.parse(m.wake.expiresAt);
-                const noAnswer = m.wake?.status === "expired" && m.wake.fromMemberId === me.id && !m.awake;
-                return (
-                  <div key={m.id} className="flex items-center gap-2 py-2">
-                    <span className="flex-1 font-medium">
-                      {m.nickname}
-                      {m.id === me.id && <span className="text-muted-foreground"> (나)</span>}
-                    </span>
-                    {penaltyOn && (
-                      <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
-                    )}
-                    <Badge variant={s.variant}>{s.label}</Badge>
-                    {m.awake && <Badge variant="outline">일어남</Badge>}
-                    {calling && <span className="text-muted-foreground text-xs">호출 중</span>}
-                    {noAnswer && <span className="text-muted-foreground text-xs">응답 없음</span>}
-                    {m.id !== me.id && (
-                      <Button size="sm" variant="outline" onClick={() => wakeUp(m.id)}>
-                        지금 깨우기
-                      </Button>
-                    )}
-                    {canWake && (
-                      <Button size="sm" variant="outline" onClick={() => setTarget({ id: m.id, nickname: m.nickname })}>
-                        클립
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+        {poked && (
+          <p role="status" className="bg-primary text-primary-foreground rounded-lg p-3 text-center font-semibold">
+            {poked.from}님이 찔렀어요
+          </p>
+        )}
 
-          {penaltyOn && (
-          <Card>
-            <CardHeader>
-              <CardTitle>벌금 장부</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-1 text-sm">
-              <p className="text-muted-foreground text-xs">가상 포인트예요. 실제 결제가 아니에요.</p>
-              {group.penalties.length === 0 && <p className="text-muted-foreground">아직 차감이 없어요.</p>}
-              {group.penalties.map((p) => (
-                <p key={`${p.memberId}-${p.date}`} className="flex justify-between">
-                  <span>
-                    {p.date} {p.nickname} · {p.reason === "skipping" ? "못 간다" : "무응답"}
-                  </span>
-                  <span className="tabular-nums">-{p.points}P</span>
-                </p>
+        <Tabs defaultValue="status">
+          <TabsList className="w-full">
+            <TabsTrigger value="status">현황</TabsTrigger>
+            <TabsTrigger value="map">지도{sharing.on ? " · 공유 중" : ""}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="status" className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              {ordered.map((m) => (
+                <MemberCard
+                  key={m.id}
+                  member={m}
+                  isMe={m.id === me.id}
+                  selected={selected.has(m.id)}
+                  audible={ringing && m.id !== me.id}
+                  showPoints={penaltyOn}
+                  onToggle={() => toggle(m.id)}
+                  onRecord={() => setRecording(true)}
+                />
               ))}
-            </CardContent>
-          </Card>
-          )}
-        </TabsContent>
-        <TabsContent value="map">
-          <MeetupTab
-            group={group}
-            meId={me.id}
-            now={now}
-            locationVersion={locationVersion}
-            sharing={sharing}
-          />
-        </TabsContent>
-      </Tabs>
+            </div>
 
-      {target && (
-        <ClipRecorder groupId={id} fromMemberId={me.id} to={target} onClose={() => setTarget(null)} />
-      )}
-      {wakeRinging && me.wake ? (
-        <AlarmOverlay me={me} audio={audio} wakeFrom={me.wake.fromNickname} onRespond={respond} onAwake={awake} />
-      ) : (
-        ringing && <AlarmOverlay me={me} audio={audio} onRespond={respond} />
-      )}
-    </main>
+            {penaltyOn && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>벌금 장부</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-1 text-sm">
+                  <p className="text-muted-foreground text-xs">가상 포인트예요. 실제 결제가 아니에요.</p>
+                  {group.penalties.length === 0 && <p className="text-muted-foreground">아직 차감이 없어요.</p>}
+                  {group.penalties.map((p) => (
+                    <p key={`${p.memberId}-${p.date}`} className="flex justify-between">
+                      <span>
+                        {p.date} {p.nickname} · {p.reason === "skipping" ? "못 간다" : "무응답"}
+                      </span>
+                      <span className="tabular-nums">-{p.points}P</span>
+                    </p>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+          <TabsContent value="map">
+            <MeetupTab
+              group={group}
+              meId={me.id}
+              now={now}
+              locationVersion={locationVersion}
+              sharing={sharing}
+            />
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      <div className="bg-background/90 fixed inset-x-0 bottom-0 z-20 border-t backdrop-blur">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-2 p-4">
+          {ringing && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button size="lg" className="h-14 text-lg" onClick={() => respond("going")}>
+                간다
+              </Button>
+              <Button size="lg" variant="secondary" className="h-14 text-lg" onClick={() => respond("skipping")}>
+                못 간다
+              </Button>
+            </div>
+          )}
+          {sentNotice && <p className="text-muted-foreground text-center text-sm">{sentNotice}</p>}
+          <div className="relative">
+            {streak >= 2 && (
+              <span aria-live="polite" className="pointer-events-none absolute -top-3 -left-2 z-10">
+                <span className={`streak-scale ${streakTier(streak)}`}>
+                  <span className="streak-badge px-2.5 py-0.5 font-black text-white tabular-nums">
+                  <span className="streak-bg streak-bg-1" />
+                  <span className="streak-bg streak-bg-2" />
+                  <span className="streak-bg streak-bg-3" />
+                  <span className="streak-bg streak-bg-4" />
+                  <span className="streak-content">
+                    <Flame className="streak-flame size-4" aria-hidden />
+                    <span key={streak} className="streak-num">
+                      {streak}
+                    </span>
+                    연타
+                  </span>
+                  {(STREAK_TIERS as readonly number[]).includes(streak) && (
+                    <span key={`burst-${streak}`} className="streak-burst" />
+                  )}
+                  </span>
+                </span>
+              </span>
+            )}
+            <Button
+              size="lg"
+              variant={ringing ? "outline" : "default"}
+              className={`h-12 w-full text-base transition-transform active:scale-95 ${
+                bump === 0 ? "" : bump % 2 ? "poke-bump-a" : "poke-bump-b"
+              }`}
+              disabled={selected.size === 0}
+              onClick={poke}
+            >
+              {selected.size > 0 ? `찌르기 (${selected.size}명)` : "친구를 골라 찌르기"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {recording && <ClipRecorder groupId={id} fromMemberId={me.id} onClose={() => setRecording(false)} />}
+    </>
   );
 }
 

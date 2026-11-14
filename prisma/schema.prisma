@@ -56,8 +56,8 @@ model Clip {
   group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   fromMemberId String
   fromMember   Member   @relation("ClipFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
-  toMemberId   String
-  toMember     Member   @relation("ClipTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+  toMemberId   String?
+  toMember     Member?  @relation("ClipTo", fields: [toMemberId], references: [id], onDelete: Cascade)
   filePath     String
   mimeType     String
   hasVideo     Boolean
