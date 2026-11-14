@@ -51,6 +51,11 @@ export const locationSchema = z.object({
   accuracyM: z.number().min(0),
 });
 
+export const wakeSchema = z.object({
+  fromMemberId: z.string().min(1),
+  toMemberId: z.string().min(1),
+});
+
 export const memberRefSchema = z.object({
   memberId: z.string().min(1),
 });

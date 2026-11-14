@@ -44,7 +44,7 @@ LLM은 쓰지 않는다. 모두 결정론 코드다.
 | POST `/api/groups/:id/wake` | R11 | body `{ toMemberId }`. 같은 그룹 멤버인지 검증하고 WakeCall 생성. `wake.called` 발행 |
 | POST `/api/groups/:id/wake/ack` | R13 | 호출한 멤버에게 온 active 호출을 모두 `ackedAt = now`로 닫는다. `wake.acked` 발행 |
 
-- `GET /api/groups/:id`는 멤버별 `awake`, 그리고 요청한 멤버 기준 `activeWake`(보낸 사람 닉네임, 만료 시각, 보낸 사람의 `nextClip`)를 내려준다. 보낸 멤버에게는 자신이 보낸 호출의 상태(`calling`, `acked`, `expired`)를 내려준다.
+- `GET /api/groups/:id`는 멤버별 `awake`(오늘 일어났다를 누름)와 `wake`(그 멤버에게 온 가장 최근 호출의 `status`, 보낸 사람, `expiresAt`)를 내려준다. 요청한 멤버를 알 수 없어도 되도록 멤버 ID 파라미터를 받지 않고, 받는 쪽은 자기 항목을, 보낸 쪽은 상대 항목을 읽는다. 상태는 `calling`, `acked`, `expired`다.
 - 입력은 Zod로 검증하고 스키마는 `lib/schemas.ts`에 추가한다.
 - 자기 자신 호출은 400이다.
 - 재생할 클립은 본 앱 규칙(받는 사람의 미사용 클립 중 가장 오래된 것)을 따른다. ack가 그 클립의 usedDate를 채운다.

@@ -4,6 +4,7 @@ import { attendanceStatuses } from "@/lib/attendance";
 import type { GroupState } from "@/lib/group-state";
 import { error } from "@/lib/http";
 import { recordAbsences } from "@/lib/penalty-store";
+import { wakeExpiresAt, wakeStatus } from "@/lib/wake";
 
 async function loadGroup(id: string, date: string) {
   return db.group.findUnique({
@@ -17,6 +18,11 @@ async function loadGroup(id: string, date: string) {
             where: { usedDate: null },
             orderBy: { createdAt: "asc" },
             take: 1,
+            include: { fromMember: { select: { nickname: true } } },
+          },
+          wakeReceived: {
+            orderBy: { createdAt: "desc" },
+            take: 20,
             include: { fromMember: { select: { nickname: true } } },
           },
         },
@@ -74,7 +80,17 @@ export async function GET(
     date,
     members: group.members.map((m) => {
       const clip = m.clipsReceived[0];
+      const latest = m.wakeReceived[0];
       return {
+        awake: m.wakeReceived.some((c) => c.ackedAt && dateKey(c.ackedAt) === date),
+        wake: latest
+          ? {
+              status: wakeStatus(latest, now),
+              fromMemberId: latest.fromMemberId,
+              fromNickname: latest.fromMember.nickname,
+              expiresAt: wakeExpiresAt(latest).toISOString(),
+            }
+          : null,
         id: m.id,
         nickname: m.nickname,
         points: m.points,
