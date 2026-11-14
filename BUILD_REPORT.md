@@ -4,7 +4,9 @@
 
 | 단계 | 사용한 Kiro 기능 | 무엇을 했는지 | 결과물 위치 |
 |---|---|---|---|
+| 기획 | Spec (requirements) | 요구사항 6개와 인수 조건 작성. Crew 에이전트가 Spec 형식에 맞춰 작성했고 Kiro IDE의 Spec 흐름으로 만든 것은 아님 | `.kiro/specs/wake-buddy/requirements.md` |
 | 기획 | Steering | 운동 기상 버디(그룹 알람, 음성 알람, 참가 공유, 가상 벌금) 제품 정의 | `.kiro/steering/product.md` |
+| 설계 | Spec (design) | 데이터 모델, API, SSE 이벤트, 알람 재생 흐름 작성. Crew 에이전트가 Spec 형식에 맞춰 작성 | `.kiro/specs/wake-buddy/design.md` |
 | 설계 | Steering | 웹 앱, SSE, MediaRecorder, SQLite 스택과 폴더 구조 정의 | `.kiro/steering/tech.md`, `.kiro/steering/structure.md` |
 | 설계 | Steering | 개인 하네스(karpathy 규칙)를 Kiro 형식으로 이식 | `.kiro/steering/behavior.md` |
 | 설계 | Steering | 홈랩 k8s/ArgoCD 배포 규칙 정의 | `.kiro/steering/deploy.md` |
@@ -13,12 +15,13 @@
 | 검증 | Hooks (Stop) | doc-sync 훅이 에이전트의 BUILD_REPORT 갱신을 실제로 유도함을 확인 | `.kiro/hooks/doc-sync.json` |
 | 기타 | Steering + Hooks | 개인 worktree 규칙과 main 직접 커밋/push 차단 훅 이식. 스크립트 단독 시험만 완료, Kiro 실행 시험은 아직 | `.kiro/steering/worktree.md`, `.kiro/hooks/main-branch-guard.json` |
 
-Spec(requirements, design, tasks)은 아직 작성 전이다.
+tasks.md는 아직 작성 전이다.
 
 ## 개발 과정에서 바뀐 점
 
 - 사람 특징 기억 도우미에서 운동 기상 버디로 주제를 바꿨다. 이유: 평일 매일 겪는 불편이고, 외부 API 없이 작동하며, 두 화면이 동시에 바뀌는 데모가 가능하다.
 - 전화 버튼을 비동기 음성 녹음 전송으로 바꿨다. 이유: WebRTC 없이 구현 가능하고 친구 목소리가 알람이 된다.
+- 음성 녹음을 10초 영상으로 바꾸고, 카메라를 끄면 음성만 보내게 했다. 이유: 같은 `MediaRecorder` 흐름이라 구현 차이가 작고, 친구 얼굴이 뜨는 알람이 데모 효과가 크다. 영상과 음성은 Clip 모델 하나로 두고 mimeType만 다르게 저장한다.
 - TWA/네이티브 대신 웹으로 정했다. 이유: TWA도 Chrome 엔진이라 백그라운드 알람과 자동 재생 제약이 같다.
 - LLM과 Bedrock을 뺐다. 이유: 비용과 키 관리 부담, 핵심 가치와 무관.
 - 벌금은 실제 결제 대신 가상 포인트 장부로 한정했다.

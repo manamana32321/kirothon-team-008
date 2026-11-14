@@ -11,9 +11,9 @@
 ## 매니페스트 규칙
 - `kustomization.yaml`에 `namespace:`를 쓰지 않는다. 네임스페이스는 ArgoCD `destination.namespace`가 SSOT다.
 - `replicas: 1`, 전략은 `Recreate`. SQLite 파일과 SSE 구독이 프로세스 안에 있다.
-- `data/`(SQLite와 오디오)는 PVC에 마운트한다.
+- `data/`(SQLite와 클립)는 PVC에 마운트한다.
 - 헬스체크 엔드포인트 `/healthz`를 구현하고 liveness와 readiness probe에 쓴다.
-- Ingress는 cert-manager TLS를 쓴다. 마이크 접근에 HTTPS가 필요하다.
+- Ingress는 cert-manager TLS를 쓴다. 카메라와 마이크 접근에 HTTPS가 필요하다.
 - 이 앱은 시크릿이 없다. SealedSecret은 만들지 않는다.
 
 ## 배포 검증 (머지 후)
