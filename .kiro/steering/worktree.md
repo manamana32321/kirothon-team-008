@@ -5,5 +5,6 @@
 - 폴더 이름은 브랜치 이름에서 `feat/` 같은 접두어를 뗀 것이다.
 - 생성: `git worktree add ~/kirothon-team-008-worktrees/{이름} -b {브랜치}`.
 - 머지 후 정리: `git worktree remove {경로}` 와 `git branch -d {브랜치}`.
-- `main`에는 직접 커밋과 push를 하지 않는다. 브랜치를 push하고 PR로 합친다.
+- `main`에는 직접 커밋과 push를 하지 않는다. 브랜치에서 작업하고 브랜치를 push한다.
+- PR은 생략한다. 브랜치를 `main`에 머지하는 것은 에이전트가 해도 된다.
 - gitignore된 `.env`는 워크트리로 복사하되 커밋하지 않는다.

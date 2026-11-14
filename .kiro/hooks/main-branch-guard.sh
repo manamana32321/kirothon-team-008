@@ -17,5 +17,5 @@ if [ "$BRANCH" != "main" ] && [ "$PUSH_MAIN" = "0" ]; then
   exit 0
 fi
 
-printf 'main 브랜치에 직접 커밋 또는 push 하려고 해서 차단했습니다.\n워크트리를 만들어 브랜치에서 작업하고 PR로 합치세요. 규칙은 .kiro/steering/worktree.md 에 있습니다.\n' >&2
+printf 'main 브랜치에 직접 커밋 또는 push 하려고 해서 차단했습니다.\n워크트리를 만들어 브랜치에서 작업하세요. 브랜치 머지는 허용됩니다(PR 생략). 규칙은 .kiro/steering/worktree.md 에 있습니다.\n' >&2
 exit 2
