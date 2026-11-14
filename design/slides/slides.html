@@ -7,7 +7,7 @@
 @page { size: 1280px 720px; margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: #fff; }
-body { font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; color: #111827; }
+body { word-break: keep-all; overflow-wrap: break-word; font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; color: #111827; }
 .s { width: 1280px; height: 720px; padding: 64px 80px; position: relative; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; }
 .s:last-child { page-break-after: auto; }
 .tag { font-size: 18px; font-weight: 700; color: #16a34a; letter-spacing: .04em; margin-bottom: 14px; }
@@ -55,7 +55,7 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
   <div class="tag">KIROTHON 2026 · team-008 · 1398</div>
   <h1>운동기</h1>
   <p class="big" style="margin-top:18px">Gymcall</p>
-  <p class="big" style="margin-top:28px; max-width:720px">알람을 끄는 순간이<br>"Go"가 되는 아침 운동 알람</p>
+  <p class="big" style="margin-top:28px; max-width:720px">같이 운동 가는 친구끼리<br>서로 깨워 주는 아침 알람</p>
   <p style="margin-top:40px; font-size:22px; color:#dcfce7">gymcall.json-server.win · github.com/manamana32321/kirothon-team-008</p>
   <img class="logo" src="icon.png" alt="운동기 아이콘">
 </section>
@@ -80,9 +80,9 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
         <li>같이 운동하기로 한 친구가 안 일어나면</li>
         <li>카톡으로 "ㅇㄷㄱ?(운동 가?)"를 보내고</li>
         <li>답이 없으면 전화까지 건다</li>
-        <li>내 알람은 <b>혼자 끄면 끝</b>. 친구는 내가 일어났는지 모른다</li>
+        <li>내 알람은 <b>혼자 끄면 끝</b>이라 친구는 내가 일어났는지 모른다</li>
       </ul>
-      <p class="muted" style="font-size:18px; margin-top:16px">실제 대화에서 가져온 예시. 이름은 지움.</p>
+      <p class="muted" style="font-size:18px; margin-top:16px">실제 대화 그대로 (이름만 가림)</p>
     </div>
   </div>
   <div class="foot"><span>운동기 · team-008</span><span>2</span></div>
@@ -99,9 +99,9 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
   <div class="grid3" style="margin-top:24px">
     <div class="card"><h3>늦잠 고백 5일</h3><p>"늦잠", "이제 일어남"</p></div>
     <div class="card"><h3>"어디야" 5일</h3><p>만날 곳을 따로 맞춤</p></div>
-    <div class="card"><h3>번갈아 깨움</h3><p>두 사람이 서로 깨운다. 한쪽 문제가 아니다</p></div>
+    <div class="card"><h3>서로 깨움</h3><p>두 사람이 번갈아 먼저 묻는다</p></div>
   </div>
-  <p class="muted" style="font-size:17px; margin-top:20px">2026-08-14 ~ 11-14, 오전 6~11시 메시지 340줄. 키워드 정규식으로는 2년간 22일만 잡혔다 ("동운 기?", "덩운..", "웅덩?"을 놓침). 원문은 레포에 없음.</p>
+  <p class="muted" style="font-size:17px; margin-top:20px">2026-08-14 ~ 11-14 오전 6~11시 메시지 340줄 기준. 정규식으로 세면 "동운 기?", "덩운.." 같은 변형을 놓쳐 2년간 22일만 잡혔다.</p>
   <div class="foot"><span>운동기 · team-008</span><span>3</span></div>
 </section>
 
@@ -113,8 +113,8 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
     <tr><td>알람을 혼자 끈다</td><td><b>Go / No Go</b>가 곧 알람 해제</td><td>끄는 순간 그룹 전체에 1초 안 공유</td></tr>
     <tr><td>"ㅇㄷㄱ?" 카톡</td><td>친구 카드 그리드</td><td>누가 일어났는지 한 화면에서 보임</td></tr>
     <tr><td>전화로 깨우기</td><td><b>찌르기</b> (여러 명, 연타)</td><td>받은 화면이 세게 출렁이고 진동</td></tr>
-    <tr><td>기본 알람음</td><td>친구가 찍은 10초 클립</td><td>응답 안 하면 여러 친구 목소리가 한꺼번에</td></tr>
-    <tr><td>서로 눈치</td><td>10분 뒤 자동 무응답, 가상 벌금</td><td>약속의 무게 (실제 결제 없음)</td></tr>
+    <tr><td>기본 알람음</td><td>친구가 찍은 10초 클립</td><td>응답 전까지 친구들 목소리가 같이 울림</td></tr>
+    <tr><td>서로 눈치</td><td>10분 뒤 자동 무응답, 가상 벌금</td><td>안 오면 포인트 차감 (실제 결제 없음)</td></tr>
   </table>
   <div class="foot"><span>운동기 · team-008</span><span>4</span></div>
 </section>
@@ -123,24 +123,24 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
   <div class="tag">4. 사용 흐름</div>
   <h2>아침 한 번, 화면 한 장</h2>
   <div class="flow">
-    <div class="step"><div class="n">1</div><p>그룹 만들고 QR로 친구 초대</p></div>
+    <div class="step"><div class="n">1</div><p>그룹 만들고 QR로 초대</p></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="n">2</div><p>내 카드 눌러 "야 일어나라" 10초 클립</p></div>
+    <div class="step"><div class="n">2</div><p>"야 일어나라" 10초 클립 찍기</p></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="n">3</div><p>08:00 파장이 퍼지고 친구 목소리가 울림</p></div>
+    <div class="step"><div class="n">3</div><p>08:00 알람, 친구 목소리가 울림</p></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="n">4</div><p><b>Go</b> 누르면 소리 멈춤, 모두에게 1초 안 공유</p></div>
+    <div class="step"><div class="n">4</div><p><b>Go</b> 누르면 알람이 꺼지고 바로 공유</p></div>
     <div class="arrow">→</div>
-    <div class="step"><div class="n">5</div><p>안 일어난 친구 카드 골라 <b>찌르기</b> 연타</p></div>
+    <div class="step"><div class="n">5</div><p>안 일어난 친구는 <b>찌르기</b></p></div>
   </div>
   <div class="grid2" style="margin-top:34px">
     <ul>
-      <li>매일 보는 화면엔 카드와 버튼만. 시간·벌금·장소·초대는 설정으로</li>
+      <li>매일 보는 화면엔 카드와 버튼만 두고, 나머지는 설정으로</li>
       <li>그날 안에는 Go ↔ No Go를 바꿀 수 있다</li>
     </ul>
     <ul>
-      <li>안드로이드 앱: 백그라운드 알람 화면, 찔림 진동</li>
-      <li>선택: 모임 장소에 도착하면 자동 출석</li>
+      <li>안드로이드 앱은 화면이 꺼져 있어도 알람과 진동</li>
+      <li>모임 장소에 도착하면 자동 출석 (선택)</li>
     </ul>
   </div>
   <div class="foot"><span>운동기 · team-008</span><span>5</span></div>
@@ -152,19 +152,19 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
   <div class="grid2">
     <div class="card">
       <h3>Specs 3개</h3>
-      <p><code>.kiro/specs/gymcall</code> 본 기능, <code>gymcall-meetup</code> 지도, <code>gymcall-wakeup</code> 깨우기. 요구사항 번호를 작업마다 연결. 기획이 바뀌면 spec부터 고침</p>
+      <p>본 기능, 모임 지도, 깨우기. 작업마다 요구사항 번호를 달고, 기획이 바뀌면 spec부터 고쳤다</p>
     </div>
     <div class="card">
       <h3>Steering 7개</h3>
-      <p>product, tech, structure, design, deploy, worktree, behavior. 개인 Claude Code 하네스(karpathy 규칙, 워크트리 규칙)를 Kiro 형식으로 이식</p>
+      <p>product, tech, structure, design, deploy, worktree, behavior. 평소 쓰던 Claude Code 규칙을 Kiro로 옮겨 옴</p>
     </div>
     <div class="card">
       <h3>Hooks 4개</h3>
-      <p><b>secret-guard</b> 키 유출 차단 (실제 차단 확인) · <b>doc-sync</b> 코드 바뀌면 BUILD_REPORT 갱신 요구 · <b>main-branch-guard</b> · <b>visual-check</b> 화면 변경은 사람 눈 확인</p>
+      <p><b>secret-guard</b> 키 커밋 차단 · <b>doc-sync</b> 코드 바뀌면 문서 갱신 요구 · <b>main-branch-guard</b> main 직접 커밋 차단 · <b>visual-check</b> 화면 바뀌면 직접 확인 요구</p>
     </div>
     <div class="card">
-      <h3>Kiro Crew 병렬 + 분석</h3>
-      <p>작업 2·3·4를 서브에이전트 3개가 각자 워크트리에서 동시에 구현, 충돌 0. 카톡 3개월치를 에이전트가 직접 읽어 근거 수치화</p>
+      <h3>Kiro Crew 병렬 작업</h3>
+      <p>서브에이전트 3개가 각자 워크트리에서 동시에 구현, 머지 충돌 0. 카톡 3개월치도 에이전트가 읽고 분류</p>
     </div>
   </div>
   <div class="foot"><span>운동기 · team-008</span><span>6</span></div>
@@ -172,43 +172,43 @@ code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; 
 
 <section class="s">
   <div class="tag">6. 만든 방식</div>
-  <h2>LLM 없이, 결정론 코드로</h2>
+  <h2>LLM 없이, 테스트되는 코드로</h2>
   <div class="grid2">
     <div>
       <ul>
         <li>Next.js 16 · Prisma 7 + SQLite · SSE 실시간</li>
-        <li>알람 판정, 출석 집계, 벌금, 자동 출석은 순수 함수 + 테스트 52개</li>
-        <li>계정 로그인, 쓰기 API는 본인 멤버만</li>
-        <li>안드로이드: Capacitor 셸 + 네이티브 알람 오버레이·진동</li>
+        <li>알람·출석·벌금 로직은 순수 함수, 테스트 52개</li>
+        <li>로그인 세션으로 남의 응답은 못 누름</li>
+        <li>안드로이드는 Capacitor + 네이티브 알람·진동</li>
       </ul>
     </div>
     <div>
       <ul>
         <li>main 머지 → GitHub Actions → GHCR 이미지</li>
-        <li>홈랩 K3s ArgoCD가 <code>infra/k8s</code> 동기화, Image Updater</li>
-        <li>cert-manager TLS, Cloudflare DNS는 Terraform</li>
+        <li>홈랩 K3s, ArgoCD GitOps로 자동 배포</li>
+        <li>TLS는 cert-manager, DNS는 Terraform</li>
         <li>배포 검증 4단계 + 프로덕션 E2E 통과</li>
       </ul>
     </div>
   </div>
-  <p class="muted" style="margin-top:22px; font-size:20px">PR 30여 개 · 모두 워크트리 브랜치 → PR → 사람 머지</p>
+  <p class="muted" style="margin-top:22px; font-size:20px">하루 동안 PR 40여 개, 전부 브랜치 → PR → 직접 리뷰 후 머지</p>
   <div class="foot"><span>운동기 · team-008</span><span>7</span></div>
 </section>
 
 <section class="s">
-  <div class="tag">7. 한계와 다음</div>
-  <h2>솔직하게</h2>
+  <div class="tag">7. 남은 것</div>
+  <h2>한계와 다음 단계</h2>
   <div class="grid2">
     <div class="card">
       <h3>한계</h3>
-      <p>· 브라우저로 쓰면 탭이 열려 있어야 울림<br>· 브라우저마다 녹화 형식이 달라 Chrome 기준<br>· 벌금은 가상 포인트<br>· 위치는 서버 메모리, 서버 1대 전제<br>· 비밀번호 재설정 없음</p>
+      <p>· 웹으로 쓰면 탭을 열어 둬야 울림<br>· 영상 클립은 Chrome 기준<br>· 벌금은 가상 포인트<br>· 서버 1대 전제 (위치는 메모리)<br>· 비밀번호 재설정 없음</p>
     </div>
     <div class="card">
       <h3>다음</h3>
-      <p>· 실제 운동 친구 그룹에서 2주 사용, 답장 대기 57% → 몇 %로 줄었는지 측정<br>· iOS 앱 셸<br>· 기상 스터디, 러닝 크루로 넓히기</p>
+      <p>· 실제 친구들과 2주 써 보고, 57%가 얼마나 줄었는지 재기<br>· iOS 앱<br>· 기상 스터디, 러닝 크루로 넓히기</p>
     </div>
   </div>
-  <p class="big" style="margin-top:40px; font-weight:900">ㅇㄷㄱ? 이제 묻지 말고, Go.</p>
+  <p style="margin-top:56px; font-size:44px; font-weight:900; text-align:center">ㅇㄷㄱ? 묻지 말고 <span style="color:#16a34a">Go</span></p>
   <div class="foot"><span>운동기 · team-008</span><span>8</span></div>
 </section>
 
