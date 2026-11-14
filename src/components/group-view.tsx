@@ -5,17 +5,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { ClipRecorder } from "@/components/clip-recorder";
-import { MeetupTab } from "@/components/meetup-tab";
 import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PushButton } from "@/components/push-button";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
 import type { GroupState } from "@/lib/group-state";
-import { useLocationSharing } from "@/lib/use-location-sharing";
 import { useMe } from "@/lib/use-me";
 
 const EVENTS: GroupEvent[] = [
@@ -65,8 +63,6 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [locationVersion, setLocationVersion] = useState(0);
-  const sharing = useLocationSharing(id, memberId, group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
 
@@ -91,10 +87,8 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     const source = new EventSource(`/api/groups/${id}/events`);
     const reload = () => load();
     EVENTS.forEach((e) => source.addEventListener(e, reload));
-    source.addEventListener("location.updated", () => setLocationVersion((v) => v + 1));
     source.onopen = () => {
       reload();
-      setLocationVersion((v) => v + 1);
     };
     return () => source.close();
   }, [id, load]);
@@ -249,10 +243,6 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         )}
 
         <Tabs defaultValue="status">
-          <TabsList className="w-full">
-            <TabsTrigger value="status">현황</TabsTrigger>
-            <TabsTrigger value="map">지도{sharing.on ? " · 공유 중" : ""}</TabsTrigger>
-          </TabsList>
           <TabsContent value="status" className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               {ordered.map((m) => (
@@ -288,15 +278,6 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-          <TabsContent value="map">
-            <MeetupTab
-              group={group}
-              meId={me.id}
-              now={now}
-              locationVersion={locationVersion}
-              sharing={sharing}
-            />
           </TabsContent>
         </Tabs>
       </main>
