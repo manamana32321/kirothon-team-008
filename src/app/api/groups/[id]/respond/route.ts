@@ -4,7 +4,7 @@ import { dateKey } from "@/lib/alarm";
 import { publish } from "@/lib/events";
 import { error, isUniqueViolation, parseJson } from "@/lib/http";
 import { recordAbsences, refundSkipping } from "@/lib/penalty-store";
-import { respondSchema } from "@/lib/schemas";
+import { resetSchema, respondSchema } from "@/lib/schemas";
 
 export async function POST(
   request: Request,
@@ -50,4 +50,22 @@ export async function POST(
     await refundSkipping(id, memberId, date);
   }
   return Response.json({ date, choice }, { status: existing ? 200 : 201 });
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const input = await parseJson(request, resetSchema);
+  if ("response" in input) return input.response;
+  const { memberId } = input.data;
+  const owner = await requireMember(request, id, memberId);
+  if ("response" in owner) return owner.response;
+
+  const date = dateKey(new Date());
+  await db.response.deleteMany({ where: { memberId, date } });
+  await refundSkipping(id, memberId, date);
+  publish(id, "response.created");
+  return Response.json({ date });
 }

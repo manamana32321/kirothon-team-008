@@ -221,6 +221,17 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     setMyChoice(null);
   }
 
+  async function resetResponse() {
+    const result = await send(`/api/groups/${id}/respond`, {
+      method: "DELETE",
+      json: { memberId: me!.id },
+    });
+    if (result.error !== undefined) return setSentNotice(result.error);
+    setRespondedLocal(false);
+    setMyChoice(null);
+    await load();
+  }
+
   function poke() {
     const toMemberIds = [...selected];
     setStreak((s) => s + 1);
@@ -384,6 +395,11 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
                 No Go
               </Button>
             </div>
+          )}
+          {group.alarmTime !== null && (
+            <Button size="sm" variant="ghost" className="text-muted-foreground h-7 text-xs" onClick={resetResponse}>
+              [디버그] 반응 지우기
+            </Button>
           )}
           {sentNotice && <p className="text-muted-foreground text-center text-sm">{sentNotice}</p>}
           <div className="relative">
