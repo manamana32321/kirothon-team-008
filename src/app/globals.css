@@ -137,28 +137,6 @@
   }
 }
 
-@keyframes ripple-calm {
-  0% {
-    transform: translate(-50%, -50%) scale(0.2);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes ripple-strong {
-  0% {
-    transform: translate(-50%, -50%) scale(0.1);
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.3);
-    opacity: 0;
-  }
-}
-
 @keyframes poke-shake {
   0%,
   100% {
@@ -180,123 +158,124 @@
 
 .ripple-ring {
   position: absolute;
-  left: 50%;
-  top: 45%;
-  width: 160vmax;
-  height: 160vmax;
+  left: var(--rx, 50%);
+  top: var(--ry, 20%);
+  width: 80px;
+  height: 80px;
   border-radius: 9999px;
-  border: 2px solid var(--primary);
+  border: 3px solid var(--primary);
   opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes ripple-alarm {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(9);
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes ripple-poke {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(13);
+    opacity: 0;
+    filter: blur(1.5px);
+  }
 }
 
 .ripple-calm .ripple-ring {
-  border-width: 6px;
-  animation: ripple-calm 4s ease-out infinite;
+  animation: ripple-alarm 3s ease-out infinite;
 }
 
 .ripple-calm .ripple-ring:nth-child(2) {
-  animation-delay: 1.33s;
+  animation-delay: 0.15s;
 }
 
-.ripple-calm .ripple-ring:nth-child(3) {
-  animation-delay: 2.66s;
+.ripple-calm .ripple-ring:nth-child(n + 3) {
+  display: none;
 }
 
 .ripple-strong .ripple-ring {
-  top: 50%;
-  border-width: 18px;
-  border-color: var(--accent);
-  background: color-mix(in oklch, var(--accent) 22%, transparent);
-  animation: ripple-strong 0.75s cubic-bezier(0.15, 0.8, 0.3, 1) infinite;
+  border: 4px solid var(--accent);
+  background: color-mix(in oklch, var(--accent) 20%, transparent);
+  animation: ripple-poke 0.8s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
 }
 
 .ripple-strong .ripple-ring:nth-child(2) {
-  border-width: 10px;
-  border-style: dashed;
-  border-color: var(--secondary);
+  border: 3px solid var(--foreground);
   background: transparent;
-  animation-delay: 0.12s;
+  animation-delay: 0.08s;
 }
 
 .ripple-strong .ripple-ring:nth-child(3) {
-  border-width: 5px;
-  border-color: var(--foreground);
+  border: 4px solid var(--secondary);
   background: transparent;
-  animation-delay: 0.24s;
+  animation-delay: 0.18s;
 }
 
-.poke-flash {
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  opacity: 0;
-  animation: poke-flash 0.45s ease-out 1;
+.ripple-strong .ripple-ring:nth-child(4) {
+  border: 3px solid var(--primary);
+  background: transparent;
+  animation-delay: 0.28s;
 }
 
-.poke-burst {
+.poke-tag {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  border-radius: 9999px;
-  background: repeating-conic-gradient(var(--accent) 0 5deg, transparent 5deg 15deg);
-  opacity: 0;
-  animation: poke-burst 0.8s ease-out 1;
-}
-
-.poke-pop {
-  position: absolute;
-  left: 50%;
-  top: 42%;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
   font-family: var(--font-display);
-  font-size: 96px;
+  font-size: 40px;
   line-height: 1;
   color: var(--secondary);
   -webkit-text-stroke: 6px var(--foreground);
   paint-order: stroke fill;
-  text-shadow: 6px 6px 0 var(--foreground);
-  transform: translate(-50%, -50%) rotate(-8deg);
-  animation: poke-pop 2.4s cubic-bezier(0.2, 1.6, 0.4, 1) 1 forwards;
+  text-shadow: 3px 3px 0 var(--foreground);
+  transform: rotate(-6deg) skewX(-12deg);
+  animation: poke-tag-in 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) 1 both;
 }
 
-@keyframes poke-flash {
+.poke-hit {
+  animation: poke-hit 0.5s ease-out 1;
+}
+
+@keyframes poke-tag-in {
   0% {
-    opacity: 0.45;
-  }
-  100% {
+    transform: rotate(-26deg) skewX(-12deg) scale(3);
     opacity: 0;
   }
-}
-
-@keyframes poke-burst {
-  0% {
-    transform: translate(-50%, -50%) scale(0.1) rotate(0deg);
-    opacity: 0.55;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1) rotate(25deg);
-    opacity: 0;
-  }
-}
-
-@keyframes poke-pop {
-  0% {
-    transform: translate(-50%, -50%) rotate(-8deg) scale(0);
+  60% {
     opacity: 1;
   }
-  15% {
-    transform: translate(-50%, -50%) rotate(-8deg) scale(1.15);
+  100% {
+    transform: rotate(-6deg) skewX(-12deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes poke-hit {
+  0% {
+    transform: scale(1);
   }
   25% {
-    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+    transform: scale(0.9) rotate(-2deg);
   }
-  80% {
-    opacity: 1;
+  55% {
+    transform: scale(1.06) rotate(1.5deg);
   }
   100% {
-    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
-    opacity: 0;
+    transform: scale(1);
   }
 }
 
@@ -542,19 +521,18 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ripple-ring {
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translate(-50%, -50%) scale(6);
     animation: ripple-flash 1.2s ease-out 1 !important;
   }
   .ripple-calm .ripple-ring {
     animation: none !important;
-    opacity: 0.2;
+    opacity: 0.25;
   }
-  .poke-flash,
-  .poke-burst {
-    display: none;
+  .poke-tag {
+    animation: none !important;
   }
-  .poke-pop {
-    animation: ripple-flash 2.4s ease-out 1 !important;
+  .poke-hit {
+    animation: none !important;
   }
   .poke-shake,
   .poke-bump-a,

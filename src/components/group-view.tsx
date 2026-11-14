@@ -27,6 +27,13 @@ const EVENTS: GroupEvent[] = [
 ];
 
 const POKE_FEEDBACK_MS = 2_700;
+
+function pokeOrigin(nickname: string) {
+  const card = document.querySelector(`[data-nickname="${CSS.escape(nickname)}"]`);
+  card?.scrollIntoView({ block: "nearest" });
+  const rect = card?.getBoundingClientRect();
+  return rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : {};
+}
 const POKE_VIBRATION = [120, 60, 120, 60, 240];
 const POKE_TONES = [1046, 1318];
 const STREAK_WINDOW_MS = 10_000;
@@ -63,7 +70,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [respondedLocal, setRespondedLocal] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
+  const [poked, setPoked] = useState<{ from: string; key: string; x?: number; y?: number } | null>(null);
   const pokeAudio = useRef<AudioContext | null>(null);
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
@@ -85,7 +92,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     const mine = next.members.find((m) => m.id === memberIdRef.current)?.lastPoke ?? null;
     const at = mine?.at ?? null;
     if (seenPoke.current !== undefined && mine && at !== seenPoke.current) {
-      setPoked({ from: mine.fromNickname, key: mine.at });
+      setPoked({ from: mine.fromNickname, key: mine.at, ...pokeOrigin(mine.fromNickname) });
     }
     seenPoke.current = at;
   }, [id]);
@@ -223,15 +230,18 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
       {rippleClass && (
         <div
           key={poked?.key ?? "calm"}
-          className={`pointer-events-none fixed inset-0 overflow-hidden ${poked ? "z-30" : "z-0"} ${rippleClass}`}
+          className={`pointer-events-none fixed inset-0 z-30 overflow-hidden ${rippleClass}`}
+          style={
+            (poked?.x !== undefined ? { "--rx": `${poked.x}px`, "--ry": `${poked.y}px` } : undefined) as
+              | React.CSSProperties
+              | undefined
+          }
           aria-hidden
         >
-          {poked && <span className="poke-flash" />}
-          {poked && <span className="poke-burst" />}
           <span className="ripple-ring" />
           <span className="ripple-ring" />
           <span className="ripple-ring" />
-          {poked && <span className="poke-pop">콕!</span>}
+          <span className="ripple-ring" />
         </div>
       )}
 
@@ -292,6 +302,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
                   selected={selected.has(m.id)}
                   audible={ringing && m.id !== me.id}
                   showPoints={penaltyOn}
+                  poking={poked?.from === m.nickname}
                   onToggle={() => toggle(m.id)}
                   onRecord={() => setRecording(true)}
                 />

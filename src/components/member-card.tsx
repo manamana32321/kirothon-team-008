@@ -24,6 +24,7 @@ export function MemberCard({
   selected,
   audible,
   showPoints,
+  poking,
   onToggle,
   onRecord,
 }: {
@@ -32,6 +33,7 @@ export function MemberCard({
   selected: boolean;
   audible: boolean;
   showPoints: boolean;
+  poking: boolean;
   onToggle: () => void;
   onRecord: () => void;
 }) {
@@ -64,12 +66,15 @@ export function MemberCard({
           press();
         }
       }}
+      data-nickname={member.nickname}
       aria-pressed={isMe ? undefined : selected}
       aria-label={isMe ? "내 카드" : `${member.nickname} ${selected ? "선택 해제" : "선택"}`}
-      className={`bg-muted relative aspect-[3/4] cursor-pointer overflow-hidden rounded-(--radius) border-[3px] border-foreground shadow-[3px_3px_0_var(--foreground)] outline-offset-2 transition select-none ${
+      className={`bg-muted relative aspect-[3/4] cursor-pointer overflow-hidden rounded-(--radius) border-[3px] border-foreground shadow-[3px_3px_0_var(--foreground)] outline-offset-2 transition select-none ${poking ? "poke-hit" : ""} ${
         selected ? "border-primary shadow-[3px_3px_0_var(--primary)]" : ""
       }`}
     >
+      {poking && <span className="poke-tag">콕!</span>}
+
       {clip?.hasVideo && (
         <video
           ref={(el) => {
