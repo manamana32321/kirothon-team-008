@@ -3,20 +3,24 @@ import { MEETUP_RADII_M } from "@/lib/config";
 
 export const MAX_CLIP_BYTES = 8 * 1024 * 1024;
 
-const nickname = z.string().trim().min(1).max(20);
+const username = z.string().trim().min(1).max(20);
+const password = z.string().min(8).max(128);
 const alarmTime = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "HH:MM 형식이어야 합니다");
 
+export const signupSchema = z.object({ username, password });
+
+export const loginSchema = z.object({ username, password: z.string().min(1).max(128) });
+
 export const createGroupSchema = z.object({
   name: z.string().trim().min(1).max(30),
-  nickname,
 });
 
-export const joinGroupSchema = z.object({
-  inviteCode: z.string().trim().min(1).max(32),
-  nickname,
-});
+export const joinGroupSchema = z.union([
+  z.object({ inviteCode: z.string().trim().min(1).max(32) }),
+  z.object({ groupId: z.string().min(1) }),
+]);
 
 export const setAlarmSchema = z.object({
   alarmTime,

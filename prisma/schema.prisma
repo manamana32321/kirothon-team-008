@@ -26,6 +26,8 @@ model Member {
   id            String       @id @default(cuid())
   groupId       String
   group         Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   nickname      String
   points        Int
   responses     Response[]
@@ -37,6 +39,25 @@ model Member {
   pushSubs      PushSubscription[]
 
   @@unique([groupId, nickname])
+  @@unique([groupId, userId])
+}
+
+model User {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  members      Member[]
+  sessions     AuthSession[]
+}
+
+model AuthSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Response {
