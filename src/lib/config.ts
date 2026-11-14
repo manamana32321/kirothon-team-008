@@ -1,5 +1,6 @@
 export const DATABASE_URL = process.env.DATABASE_URL || "file:./data/app.db";
 export const CLIPS_DIR = process.env.CLIPS_DIR || "./data/clips";
+export const VAPID_FILE = process.env.VAPID_FILE || "./data/vapid.json";
 export const SHARE_WINDOW_MINUTES = 120;
 export const LOCATION_STALE_SECONDS = 60;
 export const MIN_SEND_INTERVAL_SECONDS = 10;

@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { publish } from "@/lib/events";
 import { error, parseJson } from "@/lib/http";
+import { sendPush } from "@/lib/push";
 import { pokeSchema } from "@/lib/schemas";
 
 export async function POST(
@@ -23,5 +24,11 @@ export async function POST(
     data: toMemberIds.map((toMemberId) => ({ groupId: id, fromMemberId, toMemberId })),
   });
   publish(id, "poke.sent");
+  const from = await db.member.findUnique({ where: { id: fromMemberId }, select: { nickname: true } });
+  void sendPush(toMemberIds, {
+    title: "운동기",
+    body: `${from?.nickname ?? "친구"}님이 찔렀어요`,
+    url: `/g/${id}`,
+  }).catch(() => {});
   return Response.json({ poked: toMemberIds.length }, { status: 201 });
 }

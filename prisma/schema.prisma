@@ -34,6 +34,7 @@ model Member {
   clipsReceived Clip[]       @relation("ClipTo")
   wakeSent      WakeCall[]   @relation("WakeFrom")
   wakeReceived  WakeCall[]   @relation("WakeTo")
+  pushSubs      PushSubscription[]
 
   @@unique([groupId, nickname])
 }
@@ -86,4 +87,14 @@ model WakeCall {
   toMember     Member    @relation("WakeTo", fields: [toMemberId], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now())
   ackedAt      DateTime?
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }
