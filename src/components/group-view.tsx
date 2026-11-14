@@ -27,6 +27,15 @@ const EVENTS: GroupEvent[] = [
 ];
 
 const POKE_FEEDBACK_MS = 2_700;
+
+function pokeOrigin(nickname: string) {
+  const card = document.querySelector(`[data-nickname="${CSS.escape(nickname)}"]`);
+  card?.scrollIntoView({ block: "nearest" });
+  const rect = card?.getBoundingClientRect();
+  return rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : {};
+}
+const POKE_VIBRATION = [120, 60, 120, 60, 240];
+const POKE_TONES = [1046, 1318];
 const STREAK_WINDOW_MS = 10_000;
 const STREAK_TIERS = [5, 10, 20] as const;
 
@@ -43,7 +52,7 @@ export function GroupView({ id }: { id: string }) {
   if (!me.user) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-        <h1 className="text-2xl font-bold">로그인하고 입장해요</h1>
+        <h1 className="text-[28px]">로그인하고 입장해요</h1>
         <AuthForm onDone={reload} />
       </main>
     );
@@ -61,7 +70,8 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [respondedLocal, setRespondedLocal] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
+  const [poked, setPoked] = useState<{ from: string; key: string; x?: number; y?: number } | null>(null);
+  const pokeAudio = useRef<AudioContext | null>(null);
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -82,7 +92,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     const mine = next.members.find((m) => m.id === memberIdRef.current)?.lastPoke ?? null;
     const at = mine?.at ?? null;
     if (seenPoke.current !== undefined && mine && at !== seenPoke.current) {
-      setPoked({ from: mine.fromNickname, key: mine.at });
+      setPoked({ from: mine.fromNickname, key: mine.at, ...pokeOrigin(mine.fromNickname) });
     }
     seenPoke.current = at;
   }, [id]);
@@ -105,10 +115,35 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   }, []);
 
   useEffect(() => {
+    const unlock = () => {
+      if (!pokeAudio.current) pokeAudio.current = new AudioContext();
+      pokeAudio.current.resume().catch(() => {});
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
+
+  useEffect(() => {
     if (!poked) return;
+    navigator.vibrate?.(POKE_VIBRATION);
+    const ctx = audio ?? pokeAudio.current;
+    if (ctx && ctx.state === "running") {
+      POKE_TONES.forEach((freq, i) => {
+        const at = ctx.currentTime + i * 0.12;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.1);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.1);
+      });
+    }
     const timer = setTimeout(() => setPoked(null), POKE_FEEDBACK_MS);
     return () => clearTimeout(timer);
-  }, [poked]);
+  }, [poked, audio]);
 
   useEffect(() => {
     if (!sentNotice) return;
@@ -195,9 +230,15 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
       {rippleClass && (
         <div
           key={poked?.key ?? "calm"}
-          className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${rippleClass}`}
+          className={`pointer-events-none fixed inset-0 z-30 overflow-hidden ${rippleClass}`}
+          style={
+            (poked?.x !== undefined ? { "--rx": `${poked.x}px`, "--ry": `${poked.y}px` } : undefined) as
+              | React.CSSProperties
+              | undefined
+          }
           aria-hidden
         >
+          <span className="ripple-ring" />
           <span className="ripple-ring" />
           <span className="ripple-ring" />
           <span className="ripple-ring" />
@@ -212,7 +253,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         <header className="flex items-start justify-between pt-4">
           <div>
             <p className="text-muted-foreground text-sm">운동기</p>
-            <h1 className="text-2xl font-bold">{group.name}</h1>
+            <h1 className="text-[28px]">{group.name}</h1>
           </div>
           <Link
             href={`/g/${id}/settings`}
@@ -225,16 +266,16 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         </header>
 
         {group.alarmTime === null ? (
-          <Link href={`/g/${id}/settings`} className="bg-muted rounded-lg p-4 text-center font-medium">
+          <Link href={`/g/${id}/settings`} className="bg-muted rounded-(--radius) border-[3px] border-foreground p-4 text-center font-medium">
             모임 시간을 정해 주세요
           </Link>
         ) : (
-          <div className="bg-background/80 flex items-center justify-between gap-3 rounded-lg border p-4 backdrop-blur">
+          <div className="bg-secondary flex -skew-x-[8deg] items-center justify-between gap-3 rounded-(--radius) border-[3px] border-foreground p-4 shadow-[3px_3px_0_var(--foreground)]">
             <div>
               <p className="text-muted-foreground text-xs">{ringing ? "알람 울리는 중" : "매일 알람"}</p>
-              <p className="text-3xl font-bold tabular-nums">{group.alarmTime}</p>
+              <p className="font-heading text-[44px] leading-none tabular-nums">{group.alarmTime}</p>
             </div>
-            <Button onClick={armAlarm} disabled={audio !== null} size="lg">
+            <Button onClick={armAlarm} disabled={audio !== null} size="lg" variant="outline">
               {audio ? "알람 켜짐" : "알람 켜기"}
             </Button>
           </div>
@@ -242,11 +283,9 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
 
         <PushButton groupId={id} memberId={me.id} />
 
-        {poked && (
-          <p role="status" className="bg-primary text-primary-foreground rounded-lg p-3 text-center font-semibold">
-            {poked.from}님이 찔렀어요
-          </p>
-        )}
+        <p role="status" className="sr-only">
+          {poked ? `${poked.from}님이 찔렀어요` : ""}
+        </p>
 
         <Tabs defaultValue="status">
           <TabsList className="w-full">
@@ -263,6 +302,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
                   selected={selected.has(m.id)}
                   audible={ringing && m.id !== me.id}
                   showPoints={penaltyOn}
+                  poking={poked?.from === m.nickname}
                   onToggle={() => toggle(m.id)}
                   onRecord={() => setRecording(true)}
                 />
@@ -301,7 +341,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
         </Tabs>
       </main>
 
-      <div className="bg-background/90 fixed inset-x-0 bottom-0 z-20 border-t backdrop-blur">
+      <div className="bg-background fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-foreground">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 p-4">
           {ringing && (
             <div className="grid grid-cols-2 gap-2">
@@ -340,7 +380,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
             <Button
               size="lg"
               variant={ringing ? "outline" : "default"}
-              className={`h-12 w-full text-base transition-transform active:scale-95 ${
+              className={`h-12 w-full -skew-x-[8deg] text-base shadow-[4px_4px_0_var(--foreground)] transition-transform active:scale-95 ${
                 bump === 0 ? "" : bump % 2 ? "poke-bump-a" : "poke-bump-b"
               }`}
               disabled={selected.size === 0}
@@ -381,7 +421,7 @@ function JoinInline({ groupId, onJoined }: { groupId: string; onJoined: () => vo
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-      <h1 className="text-2xl font-bold">{name ? `${name}에 참여` : "그룹 참여"}</h1>
+      <h1 className="text-[28px]">{name ? `${name}에 참여` : "그룹 참여"}</h1>
       <Button disabled={!name} onClick={join}>
         참여
       </Button>

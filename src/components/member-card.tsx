@@ -24,6 +24,7 @@ export function MemberCard({
   selected,
   audible,
   showPoints,
+  poking,
   onToggle,
   onRecord,
 }: {
@@ -32,6 +33,7 @@ export function MemberCard({
   selected: boolean;
   audible: boolean;
   showPoints: boolean;
+  poking: boolean;
   onToggle: () => void;
   onRecord: () => void;
 }) {
@@ -64,12 +66,15 @@ export function MemberCard({
           press();
         }
       }}
+      data-nickname={member.nickname}
       aria-pressed={isMe ? undefined : selected}
       aria-label={isMe ? "내 카드" : `${member.nickname} ${selected ? "선택 해제" : "선택"}`}
-      className={`bg-muted relative aspect-[3/4] cursor-pointer overflow-hidden rounded-xl outline-offset-2 transition select-none ${
-        selected ? "ring-primary ring-4" : ""
+      className={`bg-muted relative aspect-[3/4] cursor-pointer overflow-hidden rounded-(--radius) border-[3px] border-foreground shadow-[3px_3px_0_var(--foreground)] outline-offset-2 transition select-none ${poking ? "poke-hit" : ""} ${
+        selected ? "border-primary shadow-[3px_3px_0_var(--primary)]" : ""
       }`}
     >
+      {poking && <span className="poke-tag">콕!</span>}
+
       {clip?.hasVideo && (
         <video
           ref={(el) => {
@@ -106,7 +111,7 @@ export function MemberCard({
       {!isMe && (
         <span
           className={`absolute top-2 right-2 flex size-6 items-center justify-center rounded-full border-2 ${
-            selected ? "bg-primary border-primary text-primary-foreground" : "border-white/80 bg-black/20"
+            selected ? "bg-primary border-foreground text-primary-foreground" : "border-foreground bg-card"
           }`}
         >
           {selected && <Check className="size-4" aria-hidden />}
@@ -129,13 +134,13 @@ export function MemberCard({
         </div>
       )}
 
-      <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-2 pt-8 text-white">
+      <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-card text-foreground border-t-[3px] border-foreground p-2">
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold">
             {member.nickname}
             {isMe && " (나)"}
           </span>
-          {showPoints && <span className="text-xs text-white/80 tabular-nums">{member.points}P</span>}
+          {showPoints && <span className="text-foreground/70 text-xs tabular-nums">{member.points}P</span>}
         </span>
         <Badge variant={status.variant}>{status.label}</Badge>
       </span>

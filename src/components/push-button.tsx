@@ -9,14 +9,14 @@ export function PushButton({ groupId, memberId }: { groupId: string; memberId: s
   if (state === "on") return null;
   if (state === "unsupported") {
     return (
-      <p className="text-muted-foreground bg-muted rounded-lg p-3 text-center text-sm">
+      <p className="text-muted-foreground bg-muted rounded-(--radius) border-[3px] border-foreground p-3 text-center text-sm">
         알림을 받으려면 Safari 공유 버튼에서 &quot;홈 화면에 추가&quot;를 하고, 그 아이콘으로 열어 주세요.
       </p>
     );
   }
   if (state === "denied") {
     return (
-      <p className="text-muted-foreground bg-muted rounded-lg p-3 text-center text-sm">
+      <p className="text-muted-foreground bg-muted rounded-(--radius) border-[3px] border-foreground p-3 text-center text-sm">
         알림이 꺼져 있어요. 기기 설정에서 운동기 알림을 허용해 주세요.
       </p>
     );

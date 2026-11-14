@@ -41,7 +41,7 @@ export default function MeetupMap({
     <MapContainer
       center={[center.lat, center.lng]}
       zoom={16}
-      className="h-80 w-full rounded-lg"
+      className="h-80 w-full rounded-(--radius) border-[3px] border-foreground"
       style={{ cursor: onPick ? "crosshair" : undefined }}
     >
       <TileLayer

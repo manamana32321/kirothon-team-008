@@ -13,7 +13,7 @@ import type { Position } from "@/lib/locations";
 
 const MeetupMap = dynamic(() => import("@/components/meetup-map"), {
   ssr: false,
-  loading: () => <div className="bg-muted h-80 w-full animate-pulse rounded-lg" />,
+  loading: () => <div className="bg-muted h-80 w-full animate-pulse rounded-(--radius)" />,
 });
 
 const DEFAULT_CENTER: LatLng = { lat: 37.5665, lng: 126.978 };
@@ -75,7 +75,7 @@ export function MeetupTab({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="flex items-center justify-between gap-3 rounded-lg border p-3">
+      <label className="flex items-center justify-between gap-3 rounded-(--radius) border-[3px] p-3">
         <span>
           <span className="font-medium">위치 공유</span>
           <span className="text-muted-foreground block text-xs">
@@ -110,7 +110,7 @@ export function MeetupTab({
         </Link>
       )}
 
-      <div className="flex flex-col divide-y rounded-lg border px-3 text-sm">
+      <div className="flex flex-col divide-y rounded-(--radius) border-[3px] bg-card px-3 text-sm">
         {mapMembers.map((m) => (
           <p key={m.id} className={`flex justify-between py-2 ${m.stale ? "opacity-50" : ""}`}>
             <span>{m.nickname}</span>
