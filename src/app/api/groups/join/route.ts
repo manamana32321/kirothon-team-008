@@ -11,9 +11,12 @@ export async function POST(request: Request) {
   if ("response" in input) return input.response;
 
   const group = await db.group.findUnique({
-    where: { inviteCode: input.data.inviteCode.toUpperCase() },
+    where:
+      "groupId" in input.data
+        ? { id: input.data.groupId }
+        : { inviteCode: input.data.inviteCode.toUpperCase() },
   });
-  if (!group) return error(404, "없는 초대 코드입니다");
+  if (!group) return error(404, "없는 그룹이거나 초대 코드입니다");
 
   const { user } = auth;
   const mine = await db.member.findFirst({ where: { groupId: group.id, userId: user.id } });

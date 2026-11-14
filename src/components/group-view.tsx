@@ -37,15 +37,24 @@ function streakTier(streak: number) {
 }
 
 export function GroupView({ id }: { id: string }) {
+  const { me, reload } = useMe();
+  if (me === undefined) return <p className="p-6">불러오는 중</p>;
+  if (!me.user) {
+    return (
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
+        <h1 className="text-2xl font-bold">로그인하고 입장해요</h1>
+        <AuthForm onDone={reload} />
+      </main>
+    );
+  }
+  const memberId = me.groups.find((g) => g.groupId === id)?.memberId;
+  if (!memberId) return <JoinInline groupId={id} onJoined={reload} />;
+  return <MemberGroupView id={id} memberId={memberId} />;
+}
+
+function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
   const [loadError, setLoadError] = useState("");
-  const { me: auth, reload: reloadAuth } = useMe();
-  const memberId =
-    auth === undefined
-      ? undefined
-      : auth.user
-        ? (auth.groups.find((g) => g.groupId === id)?.memberId ?? null)
-        : null;
   const [audio, setAudio] = useState<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
@@ -56,7 +65,7 @@ export function GroupView({ id }: { id: string }) {
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
   const [locationVersion, setLocationVersion] = useState(0);
-  const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
+  const sharing = useLocationSharing(id, memberId, group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
 
@@ -134,18 +143,9 @@ export function GroupView({ id }: { id: string }) {
   }, [ringing, anyClipSound, audio]);
 
   if (loadError) return <p className="p-6">{loadError}</p>;
-  if (!group || memberId === undefined) return <p className="p-6">불러오는 중</p>;
+  if (!group) return <p className="p-6">불러오는 중</p>;
 
-  if (!auth?.user) {
-    return (
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-        <h1 className="text-2xl font-bold">{group.name}</h1>
-        <AuthForm onDone={reloadAuth} />
-      </main>
-    );
-  }
-
-  if (!me) return <JoinInline group={group} onJoined={reloadAuth} />;
+  if (!me) return <p className="p-6">불러오는 중</p>;
 
   async function armAlarm() {
     const ctx = new AudioContext();
@@ -354,22 +354,34 @@ export function GroupView({ id }: { id: string }) {
   );
 }
 
-function JoinInline({ group, onJoined }: { group: GroupState; onJoined: () => void }) {
+function JoinInline({ groupId, onJoined }: { groupId: string; onJoined: () => void }) {
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  async function join() {
-    const result = await send("/api/groups/join", {
-      method: "POST",
-      json: { inviteCode: group.inviteCode },
+  useEffect(() => {
+    let live = true;
+    send<{ name: string }>(`/api/groups/${groupId}/preview`, { method: "GET" }).then((r) => {
+      if (!live) return;
+      if (r.error !== undefined) setError(r.error);
+      else setName(r.data.name);
     });
+    return () => {
+      live = false;
+    };
+  }, [groupId]);
+
+  async function join() {
+    const result = await send("/api/groups/join", { method: "POST", json: { groupId } });
     if (result.error !== undefined) return setError(result.error);
     onJoined();
   }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-      <h1 className="text-2xl font-bold">{group.name}에 참여</h1>
-      <Button onClick={join}>참여</Button>
+      <h1 className="text-2xl font-bold">{name ? `${name}에 참여` : "그룹 참여"}</h1>
+      <Button disabled={!name} onClick={join}>
+        참여
+      </Button>
       {error && <p className="text-destructive text-sm">{error}</p>}
     </main>
   );

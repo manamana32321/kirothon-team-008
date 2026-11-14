@@ -1,3 +1,4 @@
+import { requireGroupMember } from "@/lib/auth";
 import { subscribe } from "@/lib/events";
 
 const KEEP_ALIVE_MS = 25_000;
@@ -7,6 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const guard = await requireGroupMember(request, id);
+  if ("response" in guard) return guard.response;
   const encoder = new TextEncoder();
   let cleanup = () => {};
 

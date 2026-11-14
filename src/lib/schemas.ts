@@ -17,9 +17,10 @@ export const createGroupSchema = z.object({
   name: z.string().trim().min(1).max(30),
 });
 
-export const joinGroupSchema = z.object({
-  inviteCode: z.string().trim().min(1).max(32),
-});
+export const joinGroupSchema = z.union([
+  z.object({ inviteCode: z.string().trim().min(1).max(32) }),
+  z.object({ groupId: z.string().min(1) }),
+]);
 
 export const setAlarmSchema = z.object({
   alarmTime,
