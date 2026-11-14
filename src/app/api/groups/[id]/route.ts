@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { requireGroupMember } from "@/lib/auth";
 import { dateKey } from "@/lib/alarm";
 import { attendanceStatuses } from "@/lib/attendance";
 import type { GroupState } from "@/lib/group-state";
@@ -29,10 +30,12 @@ async function loadGroup(id: string, date: string) {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const guard = await requireGroupMember(request, id);
+  if ("response" in guard) return guard.response;
   const now = new Date();
   const date = dateKey(now);
 

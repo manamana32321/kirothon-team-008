@@ -140,7 +140,7 @@
 @keyframes ripple-calm {
   0% {
     transform: translate(-50%, -50%) scale(0.2);
-    opacity: 0.45;
+    opacity: 0.8;
   }
   100% {
     transform: translate(-50%, -50%) scale(1);
@@ -165,16 +165,16 @@
     transform: translate(0, 0) rotate(0);
   }
   20% {
-    transform: translate(-6px, 2px) rotate(-1.2deg);
+    transform: translate(-14px, 4px) rotate(-2deg);
   }
   40% {
-    transform: translate(6px, -2px) rotate(1.2deg);
+    transform: translate(14px, -4px) rotate(2deg);
   }
   60% {
-    transform: translate(-4px, 1px) rotate(-0.6deg);
+    transform: translate(-10px, 2px) rotate(-1.2deg);
   }
   80% {
-    transform: translate(4px, -1px) rotate(0.6deg);
+    transform: translate(10px, -2px) rotate(1.2deg);
   }
 }
 
@@ -190,6 +190,7 @@
 }
 
 .ripple-calm .ripple-ring {
+  border-width: 6px;
   animation: ripple-calm 4s ease-out infinite;
 }
 
@@ -202,7 +203,9 @@
 }
 
 .ripple-strong .ripple-ring {
-  border-width: 10px;
+  top: 50%;
+  border-width: 14px;
+  background: color-mix(in oklch, var(--primary) 15%, transparent);
   animation: ripple-strong 0.9s ease-out infinite;
 }
 
@@ -445,8 +448,24 @@
   }
 }
 
+@keyframes ripple-flash {
+  0% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ripple-ring,
+  .ripple-ring {
+    transform: translate(-50%, -50%) scale(0.5);
+    animation: ripple-flash 1.2s ease-out 1 !important;
+  }
+  .ripple-calm .ripple-ring {
+    animation: none !important;
+    opacity: 0.2;
+  }
   .poke-shake,
   .poke-bump-a,
   .poke-bump-b,

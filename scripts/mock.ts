@@ -4,6 +4,7 @@ import path from "node:path";
 
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 const STATE_FILE = path.join("data", "mock.json");
+const MOCK_PASSWORD = "mock-password";
 
 const MOCK_MEMBERS = [
   { nickname: "지아", color: "ff7ad9" },
@@ -11,22 +12,40 @@ const MOCK_MEMBERS = [
   { nickname: "하늘", color: "5ee6ff" },
 ];
 
-type MockState = { groupId: string; inviteCode: string; members: Record<string, string> };
+type MockMember = { memberId: string; cookie: string };
+type MockState = { groupId: string; inviteCode: string; members: Record<string, MockMember> };
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
   return i === -1 ? undefined : process.argv[i + 1];
 }
 
-async function call<T>(method: string, route: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${route}`, {
+async function request(method: string, route: string, cookie: string | null, body?: unknown) {
+  const headers: Record<string, string> = {};
+  if (cookie) headers.cookie = cookie;
+  if (body !== undefined && !(body instanceof FormData)) headers["content-type"] = "application/json";
+  return fetch(`${BASE_URL}${route}`, {
     method,
-    headers: body instanceof FormData ? undefined : { "content-type": "application/json" },
+    headers,
     body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
   });
+}
+
+async function call<T>(method: string, route: string, cookie: string | null, body?: unknown): Promise<T> {
+  const res = await request(method, route, cookie, body);
   const text = await res.text();
   if (!res.ok) throw new Error(`${method} ${route} ${res.status} ${text}`);
   return JSON.parse(text) as T;
+}
+
+async function signIn(username: string): Promise<string> {
+  const payload = { username, password: MOCK_PASSWORD };
+  let res = await request("POST", "/api/auth/signup", null, payload);
+  if (res.status === 409) res = await request("POST", "/api/auth/login", null, payload);
+  if (!res.ok) throw new Error(`sign in ${username} ${res.status} ${await res.text()}`);
+  const cookie = res.headers.get("set-cookie")?.split(";")[0];
+  if (!cookie) throw new Error(`sign in ${username}: 쿠키 없음`);
+  return cookie;
 }
 
 function makeClip(color: string): Buffer | null {
@@ -43,29 +62,33 @@ function makeClip(color: string): Buffer | null {
 
 async function seed() {
   const alarmTime = arg("alarm") ?? "06:30";
-  const owner = MOCK_MEMBERS[0];
-  const created = await call<{ groupId: string; inviteCode: string; memberId: string }>("POST", "/api/groups", {
-    name: "[검증] 목업",
-    nickname: owner.nickname,
-  });
-  const members: Record<string, string> = { [owner.nickname]: created.memberId };
+  const cookies: Record<string, string> = {};
+  for (const m of MOCK_MEMBERS) cookies[m.nickname] = await signIn(m.nickname);
+
+  const owner = MOCK_MEMBERS[0].nickname;
+  const created = await call<{ groupId: string; inviteCode: string; memberId: string }>(
+    "POST",
+    "/api/groups",
+    cookies[owner],
+    { name: "[검증] 목업" },
+  );
+  const members: Record<string, MockMember> = { [owner]: { memberId: created.memberId, cookie: cookies[owner] } };
   for (const m of MOCK_MEMBERS.slice(1)) {
-    const joined = await call<{ memberId: string }>("POST", "/api/groups/join", {
+    const joined = await call<{ memberId: string }>("POST", "/api/groups/join", cookies[m.nickname], {
       inviteCode: created.inviteCode,
-      nickname: m.nickname,
     });
-    members[m.nickname] = joined.memberId;
+    members[m.nickname] = { memberId: joined.memberId, cookie: cookies[m.nickname] };
   }
-  await call("PUT", `/api/groups/${created.groupId}/alarm`, { alarmTime, penaltyPoints: 10 });
+  await call("PUT", `/api/groups/${created.groupId}/alarm`, cookies[owner], { alarmTime, penaltyPoints: 10 });
 
   let clips = 0;
   for (const m of MOCK_MEMBERS) {
     const clip = makeClip(m.color);
     if (!clip) continue;
     const form = new FormData();
-    form.set("fromMemberId", members[m.nickname]);
+    form.set("fromMemberId", members[m.nickname].memberId);
     form.set("file", new File([new Uint8Array(clip)], "mock.webm", { type: "video/webm" }));
-    await call("POST", `/api/groups/${created.groupId}/clips`, form);
+    await call("POST", `/api/groups/${created.groupId}/clips`, members[m.nickname].cookie, form);
     clips++;
   }
 
@@ -75,7 +98,7 @@ async function seed() {
 
   console.log(`group   ${BASE_URL}/g/${created.groupId}`);
   console.log(`invite  ${created.inviteCode}`);
-  console.log(`members ${MOCK_MEMBERS.map((m) => m.nickname).join(", ")} (닉네임을 넣고 입장하면 내 카드가 맨 앞에 생김)`);
+  console.log(`members ${MOCK_MEMBERS.map((m) => m.nickname).join(", ")} (비밀번호 ${MOCK_PASSWORD})`);
   console.log(`alarm   ${alarmTime}`);
   console.log(`clips   ${clips}/${MOCK_MEMBERS.length}${clips === 0 ? " (ffmpeg 또는 libvpx 없음)" : ""}`);
 }
@@ -86,21 +109,25 @@ async function poke() {
   const every = Number(arg("every") ?? 5);
   const times = Number(arg("times") ?? Infinity);
   const only = arg("to");
-  const mockIds = new Set(Object.values(state.members));
   const senders = Object.entries(state.members);
+  const mockIds = new Set(senders.map(([, m]) => m.memberId));
 
   for (let n = 0; n < times; n++) {
-    const group = await call<{ members: { id: string; nickname: string }[] }>("GET", `/api/groups/${groupId}`);
+    const group = await call<{ members: { id: string; nickname: string }[] }>(
+      "GET",
+      `/api/groups/${groupId}`,
+      senders[0][1].cookie,
+    );
     const targets = group.members.filter((m) => (only ? m.nickname === only : !mockIds.has(m.id)));
-    const candidates = senders.filter(([, id]) => !targets.some((t) => t.id === id));
+    const candidates = senders.filter(([, s]) => !targets.some((t) => t.id === s.memberId));
     if (targets.length === 0) {
       console.log("찌를 사람이 없음. 브라우저에서 입장 후 다시 실행하세요.");
     } else if (candidates.length === 0) {
       console.log("보낼 목업 멤버가 없음.");
     } else {
-      const [nickname, fromMemberId] = candidates[n % candidates.length];
-      await call("POST", `/api/groups/${groupId}/poke`, {
-        fromMemberId,
+      const [nickname, sender] = candidates[n % candidates.length];
+      await call("POST", `/api/groups/${groupId}/poke`, sender.cookie, {
+        fromMemberId: sender.memberId,
         toMemberIds: targets.map((t) => t.id),
       });
       console.log(`${new Date().toLocaleTimeString()} ${nickname} -> ${targets.map((t) => t.nickname).join(", ")}`);

@@ -26,7 +26,3 @@ export type GroupState = {
     reason: string;
   }[];
 };
-
-export function memberKey(groupId: string) {
-  return `gymcall:member:${groupId}`;
-}

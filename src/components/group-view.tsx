@@ -3,18 +3,19 @@
 import { Flame, Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AuthForm } from "@/components/auth-form";
 import { ClipRecorder } from "@/components/clip-recorder";
 import { MeetupTab } from "@/components/meetup-tab";
 import { MemberCard } from "@/components/member-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
-import { type GroupState, memberKey } from "@/lib/group-state";
+import type { GroupState } from "@/lib/group-state";
 import { useLocationSharing } from "@/lib/use-location-sharing";
+import { useMe } from "@/lib/use-me";
 
 const EVENTS: GroupEvent[] = [
   "group.updated",
@@ -25,6 +26,8 @@ const EVENTS: GroupEvent[] = [
 ];
 
 const POKE_FEEDBACK_MS = 2_700;
+const POKE_VIBRATION = [120, 60, 120, 60, 240];
+const POKE_TONES = [1046, 1318];
 const STREAK_WINDOW_MS = 10_000;
 const STREAK_TIERS = [5, 10, 20] as const;
 
@@ -36,22 +39,36 @@ function streakTier(streak: number) {
 }
 
 export function GroupView({ id }: { id: string }) {
+  const { me, reload } = useMe();
+  if (me === undefined) return <p className="p-6">불러오는 중</p>;
+  if (!me.user) {
+    return (
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
+        <h1 className="text-2xl font-bold">로그인하고 입장해요</h1>
+        <AuthForm onDone={reload} />
+      </main>
+    );
+  }
+  const memberId = me.groups.find((g) => g.groupId === id)?.memberId;
+  if (!memberId) return <JoinInline groupId={id} onJoined={reload} />;
+  return <MemberGroupView id={id} memberId={memberId} />;
+}
+
+function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [memberId, setMemberId] = useState<string | null | undefined>(() =>
-    typeof window === "undefined" ? undefined : localStorage.getItem(memberKey(id)),
-  );
   const [audio, setAudio] = useState<AudioContext | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [respondedLocal, setRespondedLocal] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
+  const pokeAudio = useRef<AudioContext | null>(null);
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
   const [locationVersion, setLocationVersion] = useState(0);
-  const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
+  const sharing = useLocationSharing(id, memberId, group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
 
@@ -90,10 +107,35 @@ export function GroupView({ id }: { id: string }) {
   }, []);
 
   useEffect(() => {
+    const unlock = () => {
+      if (!pokeAudio.current) pokeAudio.current = new AudioContext();
+      pokeAudio.current.resume().catch(() => {});
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
+
+  useEffect(() => {
     if (!poked) return;
+    navigator.vibrate?.(POKE_VIBRATION);
+    const ctx = audio ?? pokeAudio.current;
+    if (ctx && ctx.state === "running") {
+      POKE_TONES.forEach((freq, i) => {
+        const at = ctx.currentTime + i * 0.12;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.1);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.1);
+      });
+    }
     const timer = setTimeout(() => setPoked(null), POKE_FEEDBACK_MS);
     return () => clearTimeout(timer);
-  }, [poked]);
+  }, [poked, audio]);
 
   useEffect(() => {
     if (!sentNotice) return;
@@ -129,19 +171,9 @@ export function GroupView({ id }: { id: string }) {
   }, [ringing, anyClipSound, audio]);
 
   if (loadError) return <p className="p-6">{loadError}</p>;
-  if (!group || memberId === undefined) return <p className="p-6">불러오는 중</p>;
+  if (!group) return <p className="p-6">불러오는 중</p>;
 
-  if (!me) {
-    return (
-      <JoinInline
-        group={group}
-        onJoined={(mid) => {
-          localStorage.setItem(memberKey(id), mid);
-          setMemberId(mid);
-        }}
-      />
-    );
-  }
+  if (!me) return <p className="p-6">불러오는 중</p>;
 
   async function armAlarm() {
     const ctx = new AudioContext();
@@ -235,11 +267,9 @@ export function GroupView({ id }: { id: string }) {
           </div>
         )}
 
-        {poked && (
-          <p role="status" className="bg-primary text-primary-foreground rounded-(--radius) border-[3px] border-foreground p-3 text-center font-semibold">
-            {poked.from}님이 찔렀어요
-          </p>
-        )}
+        <p role="status" className="sr-only">
+          {poked ? `${poked.from}님이 찔렀어요` : ""}
+        </p>
 
         <Tabs defaultValue="status">
           <TabsList className="w-full">
@@ -350,28 +380,34 @@ export function GroupView({ id }: { id: string }) {
   );
 }
 
-function JoinInline({ group, onJoined }: { group: GroupState; onJoined: (memberId: string) => void }) {
-  const [nickname, setNickname] = useState("");
+function JoinInline({ groupId, onJoined }: { groupId: string; onJoined: () => void }) {
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  async function join() {
-    const result = await send<{ memberId: string }>("/api/groups/join", {
-      method: "POST",
-      json: { inviteCode: group.inviteCode, nickname },
+  useEffect(() => {
+    let live = true;
+    send<{ name: string }>(`/api/groups/${groupId}/preview`, { method: "GET" }).then((r) => {
+      if (!live) return;
+      if (r.error !== undefined) setError(r.error);
+      else setName(r.data.name);
     });
+    return () => {
+      live = false;
+    };
+  }, [groupId]);
+
+  async function join() {
+    const result = await send("/api/groups/join", { method: "POST", json: { groupId } });
     if (result.error !== undefined) return setError(result.error);
-    onJoined(result.data.memberId);
+    onJoined();
   }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-      <h1 className="text-[28px]">{group.name}에 참여</h1>
-      <div className="flex gap-2">
-        <Input placeholder="내 닉네임" value={nickname} maxLength={20} onChange={(e) => setNickname(e.target.value)} />
-        <Button disabled={!nickname.trim()} onClick={join}>
-          참여
-        </Button>
-      </div>
+      <h1 className="text-[28px]">{name ? `${name}에 참여` : "그룹 참여"}</h1>
+      <Button disabled={!name} onClick={join}>
+        참여
+      </Button>
       {error && <p className="text-destructive text-sm">{error}</p>}
     </main>
   );
