@@ -1,22 +1,29 @@
 # BUILD REPORT
 
-<!-- Kiro를 개발 과정의 어느 단계에서, 어떤 기능으로, 무엇을 했는지 기록해 주세요.
-     1차 AI 심사는 이 문서와 .kiro/ 폴더를 보고 Kiro 활용을 평가해요. -->
-
 ## Kiro 활용 내역
 
 | 단계 | 사용한 Kiro 기능 | 무엇을 했는지 | 결과물 위치 |
 |---|---|---|---|
-| 기획 | <!-- 예: Spec (requirements) --> | <!-- 예: 사용자 스토리 4개와 인수 조건 작성 --> | <!-- 예: .kiro/specs/xxx/requirements.md --> |
-| 설계 | | | |
-| 구현 | | | |
-| 검증 | | | |
-| 기타 | <!-- Steering, Hooks, MCP 등 --> | | |
+| 기획 | Steering | 운동 기상 버디(그룹 알람, 음성 알람, 참가 공유, 가상 벌금) 제품 정의 | `.kiro/steering/product.md` |
+| 설계 | Steering | 웹 앱, SSE, MediaRecorder, SQLite 스택과 폴더 구조 정의 | `.kiro/steering/tech.md`, `.kiro/steering/structure.md` |
+| 설계 | Steering | 개인 하네스(karpathy 규칙)를 Kiro 형식으로 이식 | `.kiro/steering/behavior.md` |
+| 설계 | Steering | 홈랩 k8s/ArgoCD 배포 규칙 정의 | `.kiro/steering/deploy.md` |
+| 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
+| 검증 | Hooks (PreToolUse) | 시크릿 유출 차단. kiro-cli 3.3.0에서 가짜 AWS 키 쓰기 차단, 평문 통과 확인 | `.kiro/hooks/secret-guard.json`, `.kiro/hooks/secret-guard.sh` |
+| 검증 | Hooks (Stop) | doc-sync 훅이 에이전트의 BUILD_REPORT 갱신을 실제로 유도함을 확인 | `.kiro/hooks/doc-sync.json` |
+
+Spec(requirements, design, tasks)은 아직 작성 전이다.
 
 ## 개발 과정에서 바뀐 점
 
-<!-- Kiro와 작업하면서 처음 계획에서 바뀐 부분, 그 이유 -->
+- 사람 특징 기억 도우미에서 운동 기상 버디로 주제를 바꿨다. 이유: 평일 매일 겪는 불편이고, 외부 API 없이 작동하며, 두 화면이 동시에 바뀌는 데모가 가능하다.
+- 전화 버튼을 비동기 음성 녹음 전송으로 바꿨다. 이유: WebRTC 없이 구현 가능하고 친구 목소리가 알람이 된다.
+- TWA/네이티브 대신 웹으로 정했다. 이유: TWA도 Chrome 엔진이라 백그라운드 알람과 자동 재생 제약이 같다.
+- LLM과 Bedrock을 뺐다. 이유: 비용과 키 관리 부담, 핵심 가치와 무관.
+- 벌금은 실제 결제 대신 가상 포인트 장부로 한정했다.
 
 ## 어려웠던 점과 해결 방법
 
-<!-- 막혔던 부분과 어떻게 풀었는지 -->
+- 기존 하네스가 Claude Code 형식이었다. 훅 입력 JSON 필드가 다를 수 있어 특정 필드 대신 입력 전체를 검사하도록 다시 짰고, 실제 Kiro에서 시험했다.
+- Stop 훅 트리거 이름을 `AgentStop`으로 썼더니 동작하지 않았다. 이름 네 가지를 동시에 시험해 `Stop`이 맞음을 확인했다.
+- 한계: 훅 시험은 Windows의 kiro-cli로만 했고 IDE에서는 확인하지 못했다.

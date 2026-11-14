@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "doc-sync",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "bash .kiro/hooks/doc-sync.sh"
+      }
+    }
+  ]
+}
