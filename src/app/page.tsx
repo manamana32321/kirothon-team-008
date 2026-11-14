@@ -38,7 +38,7 @@ export default function Home() {
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 p-6">
       <header className="flex flex-col gap-1 pt-8">
         <h1 className="text-[28px]">운동기</h1>
-        <p className="text-muted-foreground">알람 끄기가 곧 &quot;운동 간다&quot;. ㅇㄷㄱ?</p>
+        <p className="text-muted-foreground">ㅇㄷㄱ?</p>
       </header>
 
       {me === undefined && <p>불러오는 중</p>}
