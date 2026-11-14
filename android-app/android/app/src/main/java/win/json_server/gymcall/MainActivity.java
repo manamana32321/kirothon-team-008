@@ -22,8 +22,15 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    public void onPause() {
+        AlarmWatchService.appVisible = false;
+        super.onPause();
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        AlarmWatchService.appVisible = true;
         startAlarmWatch();
     }
 
