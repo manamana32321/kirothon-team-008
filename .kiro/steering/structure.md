@@ -19,6 +19,8 @@
 │   │   └── events.ts    SSE 구독과 발행
 │   └── db.ts            Prisma 클라이언트
 ├── tests/               결정론 코드 테스트
+├── infra/k8s/           Kustomize base/ + overlays/prod/ (ArgoCD가 바라봄)
+├── Dockerfile
 ├── BUILD_REPORT.md
 ├── PRESENTATION.pdf
 └── README.md

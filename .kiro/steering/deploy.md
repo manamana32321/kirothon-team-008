@@ -4,8 +4,8 @@
 
 ## 파이프라인
 - 이미지: GitHub Actions가 빌드해 GHCR에 올린다.
-- 매니페스트: 이 레포의 `deploy/k8s/` (Kustomize `base/` + `overlays/prod/`).
-- 배포: 홈랩의 ArgoCD Application이 이 레포의 `deploy/k8s/overlays/prod`를 바라본다.
+- 매니페스트: 이 레포의 `infra/k8s/` (Kustomize `base/` + `overlays/prod/`).
+- 배포: 홈랩의 ArgoCD Application이 이 레포의 `infra/k8s/overlays/prod`를 바라본다.
 - 이미지 갱신: ArgoCD Image Updater를 쓴다. `latest` 태그와 수동 재시작은 쓰지 않는다.
 
 ## 매니페스트 규칙

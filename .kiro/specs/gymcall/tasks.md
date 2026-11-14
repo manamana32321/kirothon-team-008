@@ -1,4 +1,4 @@
-# 작업 목록: 운동 기상 버디
+# 작업 목록: 짐콜
 
 요구사항: `requirements.md`. 설계: `design.md`. 각 작업은 끝나면 `BUILD_REPORT.md`에 한 줄 남긴다.
 
@@ -62,7 +62,7 @@
     - _Requirements: 4.2, 5.2, 6.2_
 
 - [ ] 8. 배포 (7 이후, 17시 이후)
-  - Dockerfile, `deploy/k8s/` 매니페스트(replicas 1, Recreate, PVC, TLS Ingress). `.kiro/steering/deploy.md`를 따른다.
+  - Dockerfile, `infra/k8s/` 매니페스트(replicas 1, Recreate, PVC, TLS Ingress). `.kiro/steering/deploy.md`를 따른다.
   - 실패하면 녹화 영상 링크로 대신한다.
   - _Requirements: N1_
 

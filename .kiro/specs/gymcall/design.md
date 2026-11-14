@@ -1,6 +1,6 @@
-# 설계: 운동 기상 버디
+# 설계: 짐콜
 
-요구사항: `.kiro/specs/wake-buddy/requirements.md`. 스택은 `.kiro/steering/tech.md`를 따른다.
+요구사항: `.kiro/specs/gymcall/requirements.md`. 스택은 `.kiro/steering/tech.md`를 따른다.
 
 ## 임시값 (열린 질문)
 - 무응답 확정 대기: 알람 시각 후 10분. 상수 `NO_RESPONSE_MINUTES` 한 곳에 둔다.

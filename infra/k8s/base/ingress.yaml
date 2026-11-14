@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gymcall
+  labels:
+    app.kubernetes.io/part-of: gymcall
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-dns01
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: gymcall.json-server.win
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gymcall
+                port:
+                  name: http
+  tls:
+    - secretName: gymcall-tls
+      hosts:
+        - gymcall.json-server.win
