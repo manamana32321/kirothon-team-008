@@ -1,0 +1,232 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>운동기 (Gymcall) - KIROTHON 2026 team-008</title>
+<style>
+@page { size: 1280px 720px; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #fff; }
+body { word-break: keep-all; overflow-wrap: break-word; font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; color: #111827; }
+.s { width: 1280px; height: 720px; padding: 64px 80px; position: relative; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; }
+.s:last-child { page-break-after: auto; }
+.tag { font-size: 18px; font-weight: 700; color: #16a34a; letter-spacing: .04em; margin-bottom: 14px; }
+h1 { font-size: 64px; font-weight: 900; line-height: 1.15; }
+h2 { font-size: 44px; font-weight: 900; line-height: 1.2; margin-bottom: 28px; }
+p, li { font-size: 24px; line-height: 1.55; }
+.muted { color: #6b7280; }
+.big { font-size: 30px; }
+ul { list-style: none; }
+ul li { padding-left: 28px; position: relative; margin-bottom: 12px; }
+ul li::before { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; }
+.foot { position: absolute; left: 80px; right: 80px; bottom: 32px; display: flex; justify-content: space-between; font-size: 15px; color: #9ca3af; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.card { border: 3px solid #111827; border-radius: 16px; padding: 22px 24px; background: #fff; box-shadow: 5px 5px 0 #111827; }
+.card h3 { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+.card p { font-size: 20px; line-height: 1.5; }
+.stat { font-size: 64px; font-weight: 900; color: #16a34a; line-height: 1; }
+.stat small { font-size: 26px; color: #111827; }
+.lbl { font-size: 20px; margin-top: 10px; color: #374151; }
+table { border-collapse: collapse; width: 100%; font-size: 21px; }
+th, td { border-bottom: 2px solid #e5e7eb; padding: 11px 12px; text-align: left; vertical-align: top; }
+th { font-size: 18px; color: #6b7280; border-bottom: 3px solid #111827; }
+td b { color: #16a34a; }
+.chat { display: flex; flex-direction: column; gap: 10px; }
+.b { max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 24px; background: #fde047; align-self: flex-start; }
+.b.r { align-self: flex-end; background: #e5e7eb; }
+.time { font-size: 15px; color: #9ca3af; align-self: center; }
+.cover { background: #16a34a; color: #fff; justify-content: center; }
+.cover .tag { color: #bbf7d0; }
+.cover h1 { font-size: 96px; }
+.logo { position: absolute; right: 90px; top: 50%; transform: translateY(-50%); width: 300px; height: 300px; border-radius: 64px; object-fit: cover; box-shadow: 10px 10px 0 #14532d; }
+.flow { display: flex; align-items: stretch; gap: 14px; margin-top: 8px; }
+.step { flex: 1; border: 3px solid #111827; border-radius: 14px; padding: 18px; background: #f0fdf4; }
+.step .n { font-size: 34px; font-weight: 900; color: #16a34a; }
+.step p { font-size: 19px; line-height: 1.45; margin-top: 6px; }
+.arrow { align-self: center; font-size: 34px; font-weight: 900; color: #16a34a; }
+code { font-family: Consolas, monospace; font-size: .85em; background: #f3f4f6; padding: 1px 6px; border-radius: 6px; }
+.chip { display: inline-block; border: 2px solid #111827; border-radius: 999px; padding: 4px 14px; font-size: 18px; font-weight: 700; margin: 0 8px 8px 0; background: #fff; }
+.shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 4px; }
+.shot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.shot img { height: 440px; width: auto; aspect-ratio: 780 / 1688; object-fit: cover; object-position: top; border: 4px solid #111827; border-radius: 22px; box-shadow: 5px 5px 0 #111827; }
+.shot span { font-size: 19px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<section class="s cover">
+  <div class="tag">KIROTHON 2026 · team-008 · 1398</div>
+  <h1>운동기</h1>
+  <p class="big" style="margin-top:18px">Gymcall</p>
+  <p class="big" style="margin-top:28px; max-width:720px">같이 운동 가는 친구끼리<br>서로 깨워 주는 아침 알람</p>
+  <p style="margin-top:40px; font-size:22px; color:#dcfce7">gymcall.json-server.win · github.com/manamana32321/kirothon-team-008</p>
+  <img class="logo" src="icon.png" alt="운동기 아이콘">
+</section>
+
+<section class="s">
+  <div class="tag">1. 문제</div>
+  <h2>평일 아침 8시, 매일 같은 카톡</h2>
+  <div class="grid2" style="align-items:center">
+    <div class="chat">
+      <div class="time">오전 8:20</div>
+      <div class="b">행님 운동 ㄱ?</div>
+      <div class="time">… 81분 뒤 …</div>
+      <div class="b r">늦잠</div>
+      <div class="b r">지금 갈게</div>
+      <div class="time" style="margin-top:10px">다른 날 오전 8:24</div>
+      <div class="b">동운 기 ?</div>
+      <div class="time">… 46분 뒤 …</div>
+      <div class="b r">이제 일남ㅋㅋ 좀 늦을듯</div>
+    </div>
+    <div>
+      <ul>
+        <li>같이 운동하기로 한 친구가 안 일어나면</li>
+        <li>카톡으로 "ㅇㄷㄱ?(운동 가?)"를 보내고</li>
+        <li>답이 없으면 전화까지 건다</li>
+        <li>내 알람은 <b>혼자 끄면 끝</b>이라 친구는 내가 일어났는지 모른다</li>
+      </ul>
+      <p class="muted" style="font-size:18px; margin-top:16px">실제 대화 그대로 (이름만 가림)</p>
+    </div>
+  </div>
+  <div class="foot"><span>운동기 · team-008</span><span>2</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">2. 근거</div>
+  <h2>3개월 카톡을 AI가 직접 읽고 셌다</h2>
+  <div class="grid3">
+    <div class="card"><div class="stat">28<small>일</small></div><div class="lbl">아침에 "운동 가?"를 물은 날<br>(평일 24, 토 4)</div></div>
+    <div class="card"><div class="stat">57<small>%</small></div><div class="lbl">물은 날 중 10분 넘게 기다리거나<br>끝내 답이 없던 날 (16일)</div></div>
+    <div class="card"><div class="stat">126<small>분</small></div><div class="lbl">가장 오래 기다린 답장<br>(늦게 온 답 12~126분)</div></div>
+  </div>
+  <div class="grid3" style="margin-top:24px">
+    <div class="card"><h3>늦잠 고백 5일</h3><p>"늦잠", "이제 일어남"</p></div>
+    <div class="card"><h3>"어디야" 5일</h3><p>만날 곳을 따로 맞춤</p></div>
+    <div class="card"><h3>서로 깨움</h3><p>두 사람이 번갈아 먼저 묻는다</p></div>
+  </div>
+  <p class="muted" style="font-size:17px; margin-top:20px">2026-08-14 ~ 11-14 오전 6~11시 메시지 340줄 기준. 정규식으로 세면 "동운 기?", "덩운.." 같은 변형을 놓쳐 2년간 22일만 잡혔다.</p>
+  <div class="foot"><span>운동기 · team-008</span><span>3</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">3. 해결</div>
+  <h2>깨우기를 앱 안으로 옮겼다</h2>
+  <table>
+    <tr><th style="width:32%">지금 (카톡·전화)</th><th style="width:34%">운동기</th><th>바뀌는 것</th></tr>
+    <tr><td>알람을 혼자 끈다</td><td><b>Go / No Go</b>가 곧 알람 해제</td><td>끄는 순간 그룹 전체에 1초 안 공유</td></tr>
+    <tr><td>"ㅇㄷㄱ?" 카톡</td><td>친구 카드 그리드</td><td>누가 일어났는지 한 화면에서 보임</td></tr>
+    <tr><td>전화로 깨우기</td><td><b>찌르기</b> (여러 명, 연타)</td><td>받은 화면이 세게 출렁이고 진동</td></tr>
+    <tr><td>기본 알람음</td><td>친구가 찍은 10초 클립</td><td>응답 전까지 친구들 목소리가 같이 울림</td></tr>
+    <tr><td>서로 눈치</td><td>10분 뒤 자동 무응답, 가상 벌금</td><td>안 오면 포인트 차감 (실제 결제 없음)</td></tr>
+  </table>
+  <div class="foot"><span>운동기 · team-008</span><span>4</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">4. 사용 흐름</div>
+  <h2>아침 한 번, 화면 한 장</h2>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><p>그룹 만들고 QR로 초대</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">2</div><p>"야 일어나라" 10초 클립 찍기</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">3</div><p>08:00 알람, 친구 목소리가 울림</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">4</div><p><b>Go</b> 누르면 알람이 꺼지고 바로 공유</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">5</div><p>안 일어난 친구는 <b>찌르기</b></p></div>
+  </div>
+  <div class="grid2" style="margin-top:34px">
+    <ul>
+      <li>매일 보는 화면엔 카드와 버튼만 두고, 나머지는 설정으로</li>
+      <li>그날 안에는 Go ↔ No Go를 바꿀 수 있다</li>
+    </ul>
+    <ul>
+      <li>안드로이드 앱은 화면이 꺼져 있어도 알람과 진동</li>
+      <li>모임 장소에 도착하면 자동 출석 (선택)</li>
+    </ul>
+  </div>
+  <div class="foot"><span>운동기 · team-008</span><span>5</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">실제 화면</div>
+  <h2 style="margin-bottom:18px">배포된 앱 그대로</h2>
+  <div class="shots">
+    <div class="shot"><img src="s1-ringing.png" alt="알람이 울리는 그룹 화면"><span>알람 중, 친구 클립 재생</span></div>
+    <div class="shot"><img src="s3-streak.png" alt="친구를 골라 찌르기 6연타"><span>골라서 찌르기, 6연타</span></div>
+    <div class="shot"><img src="s4-poked.png" alt="찔린 친구 화면"><span>찔린 친구 화면</span></div>
+    <div class="shot"><img src="s5-settings.png" alt="모임 설정 화면"><span>모임 설정</span></div>
+  </div>
+  <div class="foot"><span>운동기 · team-008 · gymcall.json-server.win</span><span>6</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">5. Kiro 활용</div>
+  <h2>Spec → Steering → Hooks → 병렬 에이전트</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Specs 3개</h3>
+      <p>본 기능, 모임 지도, 깨우기. 작업마다 요구사항 번호를 달고, 기획이 바뀌면 spec부터 고쳤다</p>
+    </div>
+    <div class="card">
+      <h3>Steering 7개</h3>
+      <p>product, tech, structure, design, deploy, worktree, behavior. 평소 쓰던 Claude Code 규칙을 Kiro로 옮겨 옴</p>
+    </div>
+    <div class="card">
+      <h3>Hooks 4개</h3>
+      <p><b>secret-guard</b> 키 커밋 차단 · <b>doc-sync</b> 코드 바뀌면 문서 갱신 요구 · <b>main-branch-guard</b> main 직접 커밋 차단 · <b>visual-check</b> 화면 바뀌면 직접 확인 요구</p>
+    </div>
+    <div class="card">
+      <h3>Kiro Crew 병렬 작업</h3>
+      <p>서브에이전트 3개가 각자 워크트리에서 동시에 구현, 머지 충돌 0. 카톡 3개월치도 에이전트가 읽고 분류</p>
+    </div>
+  </div>
+  <div class="foot"><span>운동기 · team-008</span><span>7</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">6. 만든 방식</div>
+  <h2>LLM 없이, 테스트되는 코드로</h2>
+  <div class="grid2">
+    <div>
+      <ul>
+        <li>Next.js 16 · Prisma 7 + SQLite · SSE 실시간</li>
+        <li>알람·출석·벌금 로직은 순수 함수, 테스트 52개</li>
+        <li>로그인 세션으로 남의 응답은 못 누름</li>
+        <li>안드로이드는 Capacitor + 네이티브 알람·진동</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li>main 머지 → GitHub Actions → GHCR 이미지</li>
+        <li>홈랩 K3s, ArgoCD GitOps로 자동 배포</li>
+        <li>TLS는 cert-manager, DNS는 Terraform</li>
+        <li>배포 검증 4단계 + 프로덕션 E2E 통과</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:22px; font-size:20px">하루 동안 PR 40여 개, 전부 브랜치 → PR → 직접 리뷰 후 머지</p>
+  <div class="foot"><span>운동기 · team-008</span><span>8</span></div>
+</section>
+
+<section class="s">
+  <div class="tag">7. 남은 것</div>
+  <h2>한계와 다음 단계</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>한계</h3>
+      <p>· 웹으로 쓰면 탭을 열어 둬야 울림<br>· 영상 클립은 Chrome 기준<br>· 벌금은 가상 포인트<br>· 서버 1대 전제 (위치는 메모리)<br>· 비밀번호 재설정 없음</p>
+    </div>
+    <div class="card">
+      <h3>다음</h3>
+      <p>· 실제 친구들과 2주 써 보고, 57%가 얼마나 줄었는지 재기<br>· iOS 앱<br>· 기상 스터디, 러닝 크루로 넓히기</p>
+    </div>
+  </div>
+  <p style="margin-top:56px; font-size:44px; font-weight:900; text-align:center">ㅇㄷㄱ? 묻지 말고 <span style="color:#16a34a">Go</span></p>
+  <div class="foot"><span>운동기 · team-008</span><span>9</span></div>
+</section>
+
+</body>
+</html>

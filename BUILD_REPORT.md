@@ -23,6 +23,7 @@
 | 기획 | Kiro 에이전트 자연어 분석 | 문제 근거: 실제 카톡 3개월치 아침 메시지 340줄을 에이전트가 직접 읽고 분류(정규식은 철자가 제각각이라 놓침). 원문은 레포에 넣지 않고 숫자만 기록 | `README.md` 근거 절 |
 | 기타 | Spec (tasks 9) + Steering | README를 템플릿 섹션 전부 채움. 기능별 코드 위치, 사용 시나리오, 설계 목표 표, 한계, 설치·실행·테스트 명령. 문서에 적은 경로 28개가 실제로 있는지 스크립트로 확인 | `README.md` |
 | 구현 | Spec (gymcall R3 갱신) + Steering | 사용자 피드백 5건 한 번에 반영: "알람 켜기" 버튼 제거(앱은 WebView 자동 재생, 브라우저는 첫 터치), Go/No Go 응답을 그날 안에 바꿀 수 있게 하고 No Go→Go면 차감 환불, 문구 Go/No Go·찌르기, 안드로이드 하단 시스템 바 가림(WindowInsets 마진). curl로 201→200→차감→환불 확인 | `src/app/api/groups/[id]/respond/route.ts`, `src/lib/penalty-store.ts`, `android-app/.../MainActivity.java` |
+| 기타 | Kiro 에이전트 문서 생성 | 발표 자료 8쪽을 HTML로 쓰고 headless Chrome으로 PDF 변환. 수치는 README 근거와 같은 값만 사용. 원본은 `design/slides/slides.html` | `PRESENTATION.pdf` |
 | 검증 | Steering (`deploy.md` 검증 4단계) | 프로덕션 배포 검증: Pod Ready·재시작 0, ArgoCD Synced·Healthy이고 본 리비전이 main 머지 커밋과 같음, 실행 중 이미지 digest = GHCR latest, 클러스터 내부 `/healthz` 200, TLS 인증서 Ready, 외부 200 | `.kiro/steering/deploy.md`, `infra/k8s/` |
 | 검증 | Kiro 에이전트 E2E (curl) | 프로덕션에서 시험 계정 2개로 전체 흐름: 비로그인 401, 비멤버 403, 초대 코드 참여, 클립 업로드·다른 멤버가 같은 바이트로 받음, 남의 이름으로 클립 403, 찌르기 3회, 자기 찌르기 400, Go 반영, No Go 차감 100→90P, 두 사람 모두 SSE 이벤트 8건 수신 | `.kiro/specs/gymcall/tasks.md` 작업 8 |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
