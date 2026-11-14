@@ -250,21 +250,91 @@
 
 @keyframes streak-pop {
   0% {
-    transform: scale(0.4) rotate(-12deg);
+    transform: scale(0.4);
     opacity: 0;
   }
   60% {
-    transform: scale(1.25) rotate(-6deg);
+    transform: scale(1.25);
     opacity: 1;
   }
   100% {
-    transform: scale(1) rotate(-6deg);
+    transform: scale(1);
   }
 }
 
 .streak-pop {
-  transform: rotate(-6deg);
+  display: block;
   animation: streak-pop 0.3s ease-out;
+}
+
+.streak-levelup {
+  display: block;
+  animation: streak-levelup 0.7s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.streak-levelup::before,
+.streak-levelup::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 3px solid #facc15;
+  animation: streak-burst 0.7s ease-out forwards;
+  pointer-events: none;
+}
+
+.streak-levelup::after {
+  border-color: #fff;
+  animation-delay: 0.12s;
+}
+
+@keyframes streak-levelup {
+  0% {
+    transform: scale(0.6);
+    filter: brightness(3);
+  }
+  35% {
+    transform: scale(1.8) rotate(-14deg);
+    filter: brightness(2);
+  }
+  65% {
+    transform: scale(0.9) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    filter: brightness(1);
+  }
+}
+
+@keyframes streak-burst {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.streak-flame-in {
+  animation: streak-flame-in 0.6s ease-out;
+}
+
+@keyframes streak-flame-in {
+  0% {
+    transform: scale(0) rotate(-180deg);
+  }
+  70% {
+    transform: scale(1.5) rotate(15deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+.streak-badge {
+  transform: rotate(-6deg);
 }
 
 .streak-t1 {
@@ -283,9 +353,7 @@
   font-size: 1.125rem;
   background: linear-gradient(135deg, #facc15, #f97316, #dc2626);
   box-shadow: 0 0 16px rgb(250 204 21 / 0.8);
-  animation:
-    streak-pop 0.3s ease-out,
-    streak-glow 0.8s ease-in-out 0.3s infinite alternate;
+  animation: streak-glow 0.8s ease-in-out infinite alternate;
 }
 
 .streak-t4 {
@@ -296,9 +364,8 @@
     0 0 20px rgb(168 85 247 / 0.8),
     0 0 40px rgb(239 68 68 / 0.5);
   animation:
-    streak-pop 0.3s ease-out,
     streak-rainbow 1.2s linear infinite,
-    streak-wiggle 0.25s ease-in-out 0.3s infinite;
+    streak-wiggle 0.25s ease-in-out infinite;
 }
 
 @keyframes streak-glow {
@@ -334,6 +401,10 @@
   .poke-bump-a,
   .poke-bump-b,
   .streak-pop,
+  .streak-levelup,
+  .streak-levelup::before,
+  .streak-levelup::after,
+  .streak-flame-in,
   .streak-t3,
   .streak-t4 {
     animation: none !important;

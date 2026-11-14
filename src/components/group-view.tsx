@@ -312,10 +312,21 @@ export function GroupView({ id }: { id: string }) {
               <span
                 key={`streak-${streak}`}
                 aria-live="polite"
-                className={`streak-pop ${streakTier(streak)} pointer-events-none absolute -top-3 -left-2 z-10 flex items-center gap-0.5 rounded-full px-2.5 py-0.5 font-black text-white tabular-nums`}
+                className={`${
+                  (STREAK_TIERS as readonly number[]).includes(streak) ? "streak-levelup" : "streak-pop"
+                } pointer-events-none absolute -top-3 -left-2 z-10`}
               >
-                {streak >= STREAK_TIERS[1] && <Flame className="size-4" aria-hidden />}
-                {streak}연타
+                <span
+                  className={`streak-badge ${streakTier(streak)} flex items-center gap-0.5 rounded-full px-2.5 py-0.5 font-black text-white tabular-nums`}
+                >
+                  {streak >= STREAK_TIERS[1] && (
+                    <Flame
+                      className={`size-4 ${streak === STREAK_TIERS[1] ? "streak-flame-in" : ""}`}
+                      aria-hidden
+                    />
+                  )}
+                  {streak}연타
+                </span>
               </span>
             )}
             <Button
