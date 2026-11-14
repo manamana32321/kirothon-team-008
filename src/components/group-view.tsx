@@ -226,9 +226,12 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
           className={`pointer-events-none fixed inset-0 overflow-hidden ${poked ? "z-30" : "z-0"} ${rippleClass}`}
           aria-hidden
         >
+          {poked && <span className="poke-flash" />}
+          {poked && <span className="poke-burst" />}
           <span className="ripple-ring" />
           <span className="ripple-ring" />
           <span className="ripple-ring" />
+          {poked && <span className="poke-pop">콕!</span>}
         </div>
       )}
 

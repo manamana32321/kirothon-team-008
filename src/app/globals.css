@@ -204,17 +204,100 @@
 
 .ripple-strong .ripple-ring {
   top: 50%;
-  border-width: 14px;
-  background: color-mix(in oklch, var(--primary) 15%, transparent);
-  animation: ripple-strong 0.9s ease-out infinite;
+  border-width: 18px;
+  border-color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 22%, transparent);
+  animation: ripple-strong 0.75s cubic-bezier(0.15, 0.8, 0.3, 1) infinite;
 }
 
 .ripple-strong .ripple-ring:nth-child(2) {
-  animation-delay: 0.3s;
+  border-width: 10px;
+  border-style: dashed;
+  border-color: var(--secondary);
+  background: transparent;
+  animation-delay: 0.12s;
 }
 
 .ripple-strong .ripple-ring:nth-child(3) {
-  animation-delay: 0.6s;
+  border-width: 5px;
+  border-color: var(--foreground);
+  background: transparent;
+  animation-delay: 0.24s;
+}
+
+.poke-flash {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  opacity: 0;
+  animation: poke-flash 0.45s ease-out 1;
+}
+
+.poke-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150vmax;
+  height: 150vmax;
+  border-radius: 9999px;
+  background: repeating-conic-gradient(var(--accent) 0 5deg, transparent 5deg 15deg);
+  opacity: 0;
+  animation: poke-burst 0.8s ease-out 1;
+}
+
+.poke-pop {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  font-family: var(--font-display);
+  font-size: 96px;
+  line-height: 1;
+  color: var(--secondary);
+  -webkit-text-stroke: 6px var(--foreground);
+  paint-order: stroke fill;
+  text-shadow: 6px 6px 0 var(--foreground);
+  transform: translate(-50%, -50%) rotate(-8deg);
+  animation: poke-pop 2.4s cubic-bezier(0.2, 1.6, 0.4, 1) 1 forwards;
+}
+
+@keyframes poke-flash {
+  0% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes poke-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1) rotate(0deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes poke-pop {
+  0% {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(0);
+    opacity: 1;
+  }
+  15% {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1.15);
+  }
+  25% {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+    opacity: 0;
+  }
 }
 
 .poke-shake {
@@ -465,6 +548,13 @@
   .ripple-calm .ripple-ring {
     animation: none !important;
     opacity: 0.2;
+  }
+  .poke-flash,
+  .poke-burst {
+    display: none;
+  }
+  .poke-pop {
+    animation: ripple-flash 2.4s ease-out 1 !important;
   }
   .poke-shake,
   .poke-bump-a,
