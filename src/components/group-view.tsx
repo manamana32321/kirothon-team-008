@@ -25,6 +25,7 @@ const EVENTS: GroupEvent[] = [
 ];
 
 const POKE_FEEDBACK_MS = 2_700;
+const STREAK_WINDOW_MS = 2_000;
 
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
@@ -40,6 +41,8 @@ export function GroupView({ id }: { id: string }) {
   const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const lastPokeAt = useRef(0);
   const [locationVersion, setLocationVersion] = useState(0);
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
@@ -90,6 +93,12 @@ export function GroupView({ id }: { id: string }) {
     const timer = setTimeout(() => setSentNotice(""), 2_000);
     return () => clearTimeout(timer);
   }, [sentNotice]);
+
+  useEffect(() => {
+    if (streak === 0) return;
+    const timer = setTimeout(() => setStreak(0), STREAK_WINDOW_MS);
+    return () => clearTimeout(timer);
+  }, [streak, bump]);
 
   const me = group?.members.find((m) => m.id === memberId);
   const responded = respondedLocal || me?.status === "going" || me?.status === "skipping";
@@ -149,6 +158,9 @@ export function GroupView({ id }: { id: string }) {
       json: { fromMemberId: me!.id, toMemberIds },
     });
     if (result.error !== undefined) return setSentNotice(result.error);
+    const at = Date.now();
+    setStreak((s) => (at - lastPokeAt.current < STREAK_WINDOW_MS ? s + 1 : 1));
+    lastPokeAt.current = at;
     setBump((n) => n + 1);
     setSentNotice(`${toMemberIds.length}명을 찔렀어요`);
   }
@@ -288,16 +300,27 @@ export function GroupView({ id }: { id: string }) {
             </div>
           )}
           {sentNotice && <p className="text-muted-foreground text-center text-sm">{sentNotice}</p>}
-          <Button
-            key={bump}
-            size="lg"
-            variant={ringing ? "outline" : "default"}
-            className={`h-12 text-base transition-transform active:scale-95 ${bump > 0 ? "poke-bump" : ""}`}
-            disabled={selected.size === 0}
-            onClick={poke}
-          >
-            {selected.size > 0 ? `찌르기 (${selected.size}명)` : "친구를 골라 찌르기"}
-          </Button>
+          <div className="relative">
+            {streak >= 2 && (
+              <span
+                key={`streak-${streak}`}
+                aria-live="polite"
+                className="streak-pop bg-destructive pointer-events-none absolute -top-3 -left-2 z-10 rounded-full px-2.5 py-0.5 text-sm font-black text-white tabular-nums shadow"
+              >
+                {streak}연타
+              </span>
+            )}
+            <Button
+              key={bump}
+              size="lg"
+              variant={ringing ? "outline" : "default"}
+              className={`h-12 w-full text-base transition-transform active:scale-95 ${bump > 0 ? "poke-bump" : ""}`}
+              disabled={selected.size === 0}
+              onClick={poke}
+            >
+              {selected.size > 0 ? `찌르기 (${selected.size}명)` : "친구를 골라 찌르기"}
+            </Button>
+          </div>
         </div>
       </div>
 
