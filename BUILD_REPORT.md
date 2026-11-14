@@ -13,6 +13,7 @@
 | 설계 | Steering | 홈랩 k8s/ArgoCD 배포 규칙 정의 | `.kiro/steering/deploy.md` |
 | 구현 | Spec (tasks 1) | 작업 1 골격: Next.js 16 + Tailwind 4 + shadcn/ui, Prisma 7 + SQLite(better-sqlite3 어댑터), Zod, Vitest. lint, tsc, build, 페이지 응답 확인 | `package.json`, `prisma.config.ts`, `src/db.ts` |
 | 구현 | Spec (tasks 2·3·4) + Crew 병렬 서브에이전트 | 작업 2(데이터 모델), 3(결정론 로직), 4(SSE)를 서브에이전트 3개가 각자 워크트리에서 동시에 구현. 공유 문서는 건드리지 않게 소유권을 나눠 충돌 없이 PR #4~#6으로 머지. 머지 전 네 브랜치를 합쳐 테스트 29개, lint, build, 마이그레이션·시드 확인 | `prisma/`, `src/lib/`, `src/app/api/groups/[id]/events/`, `tests/` |
+| 구현 | Spec (tasks 5) | API 7개 구현. 클립 선택 규칙(받는 사람의 가장 오래된 미사용 클립)을 서버 한 곳에 두고 `nextClip`으로 내려줌. dev 서버에 curl 시나리오로 생성·참여·409·404·400·클립 업로드/재생 바이트 일치·무응답 지연 차감·중복 차감 없음·SSE 이벤트 수신 확인 | `src/app/api/`, `src/lib/penalty-store.ts`, `src/lib/http.ts` |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
 | 기타 | Steering | 이름과 아이콘 정의: 영어 Gymcall, 한국어 운동기, 아이콘 ㅇㄷㄱ | `.kiro/steering/product.md`, `src/app/icon.svg` |
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |

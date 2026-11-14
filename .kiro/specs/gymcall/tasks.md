@@ -33,16 +33,16 @@
   - [x] 4.2 `GET /api/groups/:id/events` SSE Route Handler (Node 런타임, 연결 종료 시 구독 해제).
     - _Requirements: 2.2, 3.4_
 
-- [ ] 5. API (2, 3, 4 이후)
-  - [ ] 5.1 `POST /api/groups`, `POST /api/groups/join`. 없는 코드 404, 중복 닉네임 409.
+- [x] 5. API (2, 3, 4 이후)
+  - [x] 5.1 `POST /api/groups`, `POST /api/groups/join`. 없는 코드 404, 중복 닉네임 409.
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [ ] 5.2 `GET /api/groups/:id`: 오늘 상태와 포인트. 무응답 확정을 지연 평가하고 PenaltyLog 생성 후 `penalty.applied` 발행.
+  - [x] 5.2 `GET /api/groups/:id`: 오늘 상태와 포인트. 무응답 확정을 지연 평가하고 PenaltyLog 생성 후 `penalty.applied` 발행.
     - _Requirements: 5.1, 5.2, 6.2, 6.3_
-  - [ ] 5.3 `PUT /api/groups/:id/alarm`: 알람 시각, 시작 포인트, 차감량. `group.updated` 발행.
+  - [x] 5.3 `PUT /api/groups/:id/alarm`: 알람 시각, 차감량 (시작 포인트는 생성 시 100 고정). `group.updated` 발행.
     - _Requirements: 2.1, 2.2, 6.1_
-  - [ ] 5.4 `POST /api/groups/:id/respond`: 오늘 응답 기록, skipping이면 즉시 차감. `response.created` 발행.
+  - [x] 5.4 `POST /api/groups/:id/respond`: 오늘 응답 기록, skipping이면 즉시 차감. `response.created` 발행.
     - _Requirements: 3.3, 3.4, 6.2_
-  - [ ] 5.5 `POST /api/groups/:id/clips`, `GET /api/clips/:id`: multipart 업로드, 8MB와 mimeType 검증, `data/clips/` 저장, 저장된 mimeType으로 스트림.
+  - [x] 5.5 `POST /api/groups/:id/clips`, `GET /api/clips/:id`: multipart 업로드, 8MB와 mimeType 검증, `data/clips/` 저장, 저장된 mimeType으로 스트림.
     - _Requirements: 4.4, 4.5, 4.6_
 
 - [ ] 6. 화면 (5 이후)
