@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { dateKey } from "@/lib/alarm";
 import { attendanceStatuses } from "@/lib/attendance";
+import type { GroupState } from "@/lib/group-state";
 import { error } from "@/lib/http";
 import { recordAbsences } from "@/lib/penalty-store";
 
@@ -59,13 +60,17 @@ export async function GET(
     include: { member: { select: { nickname: true } } },
   });
 
-  return Response.json({
+  const body: GroupState = {
     id: group.id,
     name: group.name,
     inviteCode: group.inviteCode,
     alarmTime: group.alarmTime,
     startPoints: group.startPoints,
     penaltyPoints: group.penaltyPoints,
+    meetup:
+      group.meetupLat === null || group.meetupLng === null
+        ? null
+        : { lat: group.meetupLat, lng: group.meetupLng, radiusM: group.meetupRadiusM },
     date,
     members: group.members.map((m) => {
       const clip = m.clipsReceived[0];
@@ -74,6 +79,7 @@ export async function GET(
         nickname: m.nickname,
         points: m.points,
         status: statuses[m.id],
+        source: (m.responses[0]?.source ?? null) as "manual" | "auto" | null,
         nextClip: clip
           ? {
               id: clip.id,
@@ -91,5 +97,6 @@ export async function GET(
       points: p.points,
       reason: p.reason,
     })),
-  });
+  };
+  return Response.json(body);
 }

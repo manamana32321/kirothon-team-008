@@ -50,7 +50,7 @@ export async function POST(
     },
   });
   const ext = mimeType.includes("mp4") ? "mp4" : "webm";
-  const filePath = path.join(CLIPS_DIR, `${clip.id}.${ext}`);
+  const filePath = path.join(/*turbopackIgnore: true*/ CLIPS_DIR, `${clip.id}.${ext}`);
   await mkdir(CLIPS_DIR, { recursive: true });
   await writeFile(filePath, Buffer.from(await file.arrayBuffer()));
   await db.clip.update({ where: { id: clip.id }, data: { filePath } });
