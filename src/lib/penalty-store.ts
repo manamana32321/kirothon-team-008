@@ -7,7 +7,7 @@ export async function recordAbsences(
   penaltyPoints: number,
   absences: Absence[],
 ): Promise<number> {
-  if (absences.length === 0) return 0;
+  if (absences.length === 0 || penaltyPoints <= 0) return 0;
   const created = await db.$transaction(async (tx) => {
     const existing = await tx.penaltyLog.findMany({
       where: { OR: absences.map(({ memberId, date }) => ({ memberId, date })) },

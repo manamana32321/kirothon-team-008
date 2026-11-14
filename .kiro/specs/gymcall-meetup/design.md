@@ -70,8 +70,9 @@ LLM은 쓰지 않는다. 모두 결정론 코드다.
 - `/g/[id]`에 탭 두 개: "현황"(기존), "지도".
 - 지도 탭: Leaflet + OpenStreetMap 타일. `react-leaflet`을 `next/dynamic`으로 `ssr: false` 로드한다.
   - 멤버 마커와 닉네임, 모임 장소 마커와 반경 원
-  - 지도 누르기 모드로 모임 장소 지정, 반경 선택
   - "위치 공유" 스위치, 공유 안 하는 멤버 목록
+  - 모임 장소 지정은 `/g/[id]/settings`에서 한다(지도 누르기, 반경 선택, 없애기). 지도 탭은 보기만 한다
+- `DELETE /api/groups/:id/meetup`: 모임 장소를 없앤다. `group.updated` 발행
 - 현황 탭 멤버 목록에서 `source`가 auto면 "간다" 대신 "도착"을 보인다.
 - 위치 보내기: 스위치가 켜져 있는 동안 `navigator.geolocation.watchPosition`. 전송은 10초 간격으로 묶는다.
 

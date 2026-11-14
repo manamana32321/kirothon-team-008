@@ -1,12 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MapMember } from "@/components/meetup-map";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { send } from "@/lib/api-client";
-import { LOCATION_STALE_SECONDS, MEETUP_RADII_M } from "@/lib/config";
+import { LOCATION_STALE_SECONDS } from "@/lib/config";
 import { type LatLng, distanceM } from "@/lib/geo";
 import type { GroupState } from "@/lib/group-state";
 import type { Position } from "@/lib/locations";
@@ -36,10 +35,6 @@ export function MeetupTab({
 }) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [windowOpen, setWindowOpen] = useState(false);
-  const [picking, setPicking] = useState(false);
-  const [pending, setPending] = useState<LatLng | null>(null);
-  const [radiusM, setRadiusM] = useState<number>(group.meetup?.radiusM ?? 100);
-  const [error, setError] = useState("");
   const lastLoad = useRef(0);
   const scheduled = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -75,20 +70,7 @@ export function MeetupTab({
   const sharingIds = new Set(positions.map((p) => p.memberId));
   const notSharing = group.members.filter((m) => !sharingIds.has(m.id));
 
-  const center =
-    pending ?? group.meetup ?? mapMembers.find((m) => m.me) ?? mapMembers[0] ?? DEFAULT_CENTER;
-
-  async function saveMeetup() {
-    if (!pending) return;
-    setError("");
-    const result = await send(`/api/groups/${group.id}/meetup`, {
-      method: "PUT",
-      json: { ...pending, radiusM },
-    });
-    if (result.error !== undefined) return setError(result.error);
-    setPicking(false);
-    setPending(null);
-  }
+  const center = group.meetup ?? mapMembers.find((m) => m.me) ?? mapMembers[0] ?? DEFAULT_CENTER;
 
   return (
     <div className="flex flex-col gap-3">
@@ -112,49 +94,19 @@ export function MeetupTab({
       <MeetupMap
         center={center}
         place={group.meetup}
-        pending={pending ? { ...pending, radiusM } : null}
+        pending={null}
         members={mapMembers}
-        onPick={picking ? setPending : null}
+        onPick={null}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        {picking ? (
-          <>
-            <span className="text-sm">{pending ? "반경" : "지도를 눌러 장소를 고르세요"}</span>
-            {MEETUP_RADII_M.map((r) => (
-              <Button
-                key={r}
-                size="sm"
-                variant={radiusM === r ? "default" : "outline"}
-                onClick={() => setRadiusM(r)}
-              >
-                {r}m
-              </Button>
-            ))}
-            <Button size="sm" disabled={!pending} onClick={saveMeetup}>
-              저장
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setPicking(false);
-                setPending(null);
-              }}
-            >
-              취소
-            </Button>
-          </>
-        ) : (
-          <Button size="sm" variant="outline" onClick={() => setPicking(true)}>
-            {group.meetup ? `모임 장소 바꾸기 (지금 ${group.meetup.radiusM}m)` : "모임 장소 정하기"}
-          </Button>
-        )}
-      </div>
-      {!group.meetup && !picking && (
-        <p className="text-muted-foreground text-xs">모임 장소가 있어야 도착하면 자동으로 출석돼요.</p>
+      {!group.meetup && (
+        <p className="text-muted-foreground text-xs">
+          <Link href={`/g/${group.id}/settings`} className="underline underline-offset-4">
+            설정
+          </Link>
+          에서 모임 장소를 정하면 도착할 때 자동으로 출석돼요.
+        </p>
       )}
-      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <div className="flex flex-col divide-y rounded-lg border px-3 text-sm">
         {mapMembers.map((m) => (

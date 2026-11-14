@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AlarmOverlay } from "@/components/alarm-overlay";
 import { ClipRecorder } from "@/components/clip-recorder";
@@ -26,11 +27,6 @@ const STATUS: Record<AttendanceStatus, { label: string; variant: "default" | "se
 };
 
 const ARRIVED = { label: "도착", variant: "default" } as const;
-
-function inMinutes(minutes: number) {
-  const d = new Date(Date.now() + minutes * 60_000);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
 
 export function GroupView({ id }: { id: string }) {
   const [group, setGroup] = useState<GroupState | null>(null);
@@ -102,29 +98,44 @@ export function GroupView({ id }: { id: string }) {
     await load();
   }
 
+  const penaltyOn = group.penaltyPoints > 0 || group.penalties.length > 0;
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-4">
-      <header className="flex items-end justify-between pt-4">
+      <header className="flex items-start justify-between pt-4">
         <div>
           <p className="text-muted-foreground text-sm">운동기</p>
           <h1 className="text-2xl font-bold">{group.name}</h1>
         </div>
-        <button
-          className="text-right"
-          onClick={() => navigator.clipboard?.writeText(group.inviteCode)}
-          title="눌러서 복사"
+        <Link
+          href={`/g/${id}/settings`}
+          className="text-muted-foreground hover:text-foreground pt-1 text-sm underline underline-offset-4"
         >
-          <p className="text-muted-foreground text-xs">초대 코드</p>
-          <p className="font-mono text-lg font-semibold tracking-widest">{group.inviteCode}</p>
-        </button>
+          설정
+        </Link>
       </header>
 
-      <AlarmSettings
-        key={`${group.alarmTime}-${group.penaltyPoints}`}
-        group={group}
-        armed={audio !== null}
-        onArm={armAlarm}
-      />
+      {group.alarmTime === null ? (
+        <Link
+          href={`/g/${id}/settings`}
+          className="bg-muted rounded-lg p-4 text-center font-medium"
+        >
+          모임 시간을 정해 주세요
+        </Link>
+      ) : (
+        <div className="flex items-center justify-between gap-3 rounded-lg border p-4">
+          <div>
+            <p className="text-muted-foreground text-xs">매일 알람</p>
+            <p className="text-3xl font-bold tabular-nums">{group.alarmTime}</p>
+          </div>
+          <Button onClick={armAlarm} disabled={audio !== null} size="lg">
+            {audio ? "알람 켜짐" : "알람 켜기"}
+          </Button>
+        </div>
+      )}
+      {group.alarmTime !== null && !audio && (
+        <p className="text-muted-foreground -mt-2 text-xs">알람은 이 탭이 열려 있을 때만 울려요.</p>
+      )}
 
       {me.nextClip && !responded && (
         <p className="bg-muted rounded-md p-3 text-sm">
@@ -152,7 +163,9 @@ export function GroupView({ id }: { id: string }) {
                       {m.nickname}
                       {m.id === me.id && <span className="text-muted-foreground"> (나)</span>}
                     </span>
-                    <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
+                    {penaltyOn && (
+                      <span className="text-muted-foreground w-14 text-right text-sm tabular-nums">{m.points}P</span>
+                    )}
                     <Badge variant={s.variant}>{s.label}</Badge>
                     {canWake && (
                       <Button size="sm" variant="outline" onClick={() => setTarget({ id: m.id, nickname: m.nickname })}>
@@ -165,6 +178,7 @@ export function GroupView({ id }: { id: string }) {
             </CardContent>
           </Card>
 
+          {penaltyOn && (
           <Card>
             <CardHeader>
               <CardTitle>벌금 장부</CardTitle>
@@ -182,6 +196,7 @@ export function GroupView({ id }: { id: string }) {
               ))}
             </CardContent>
           </Card>
+          )}
         </TabsContent>
         <TabsContent value="map">
           <MeetupTab
@@ -199,63 +214,6 @@ export function GroupView({ id }: { id: string }) {
       )}
       {ringing && <AlarmOverlay me={me} audio={audio} onRespond={respond} />}
     </main>
-  );
-}
-
-function AlarmSettings({
-  group,
-  armed,
-  onArm,
-}: {
-  group: GroupState;
-  armed: boolean;
-  onArm: () => void;
-}) {
-  const [time, setTime] = useState(group.alarmTime ?? "08:00");
-  const [penalty, setPenalty] = useState(group.penaltyPoints);
-  const [error, setError] = useState("");
-
-  async function save(alarmTime: string) {
-    setError("");
-    const result = await send(`/api/groups/${group.id}/alarm`, {
-      method: "PUT",
-      json: { alarmTime, penaltyPoints: penalty },
-    });
-    if (result.error !== undefined) setError(result.error);
-    else setTime(alarmTime);
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>알람 {group.alarmTime ?? "없음"}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-32" />
-          <span className="text-muted-foreground text-sm">불참</span>
-          <Input
-            type="number"
-            min={0}
-            value={penalty}
-            onChange={(e) => setPenalty(Number(e.target.value))}
-            className="w-20"
-          />
-          <span className="text-muted-foreground text-sm">P</span>
-          <Button variant="secondary" onClick={() => save(time)}>
-            저장
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => save(inMinutes(1))}>
-          1분 뒤로 맞추기 (시연용)
-        </Button>
-        <Button onClick={onArm} disabled={armed} size="lg">
-          {armed ? "알람 켜짐" : "알람 켜기"}
-        </Button>
-        <p className="text-muted-foreground text-xs">알람은 이 탭이 열려 있을 때만 울려요. 매일 반복돼요.</p>
-        {error && <p className="text-destructive text-sm">{error}</p>}
-      </CardContent>
-    </Card>
   );
 }
 

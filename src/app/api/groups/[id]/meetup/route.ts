@@ -20,3 +20,17 @@ export async function PUT(
   publish(id, "group.updated");
   return Response.json(input.data);
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const updated = await db.group.updateMany({
+    where: { id },
+    data: { meetupLat: null, meetupLng: null },
+  });
+  if (updated.count === 0) return error(404, "없는 그룹입니다");
+  publish(id, "group.updated");
+  return new Response(null, { status: 204 });
+}
