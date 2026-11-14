@@ -93,3 +93,11 @@ export async function requireMember(request: Request, groupId: string, memberId:
   if (!member) return { response: error(403, "내 멤버가 아닙니다") };
   return { user: auth.user, member };
 }
+
+export async function requireGroupMember(request: Request, groupId: string) {
+  const auth = await requireUser(request);
+  if ("response" in auth) return auth;
+  const member = await db.member.findFirst({ where: { groupId, userId: auth.user.id } });
+  if (!member) return { response: error(403, "그룹 멤버가 아닙니다") };
+  return { user: auth.user, member };
+}
