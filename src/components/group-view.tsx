@@ -150,15 +150,18 @@ export function GroupView({ id }: { id: string }) {
     await load();
   }
 
-  async function poke() {
+  function poke() {
     const toMemberIds = [...selected];
-    const result = await send(`/api/groups/${id}/poke`, {
-      method: "POST",
-      json: { fromMemberId: me!.id, toMemberIds },
-    });
-    if (result.error !== undefined) return setSentNotice(result.error);
     setStreak((s) => s + 1);
     setBump((n) => n + 1);
+    send(`/api/groups/${id}/poke`, {
+      method: "POST",
+      json: { fromMemberId: me!.id, toMemberIds },
+    }).then((result) => {
+      if (result.error === undefined) return;
+      setStreak((s) => Math.max(0, s - 1));
+      setSentNotice(result.error);
+    });
   }
 
   function toggle(memberId: string) {
@@ -307,10 +310,11 @@ export function GroupView({ id }: { id: string }) {
               </span>
             )}
             <Button
-              key={bump}
               size="lg"
               variant={ringing ? "outline" : "default"}
-              className={`h-12 w-full text-base transition-transform active:scale-95 ${bump > 0 ? "poke-bump" : ""}`}
+              className={`h-12 w-full text-base transition-transform active:scale-95 ${
+                bump === 0 ? "" : bump % 2 ? "poke-bump-a" : "poke-bump-b"
+              }`}
               disabled={selected.size === 0}
               onClick={poke}
             >

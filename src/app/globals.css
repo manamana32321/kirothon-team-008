@@ -225,8 +225,27 @@
   }
 }
 
-.poke-bump {
+.poke-bump-a {
   animation: poke-bump 0.35s ease-out;
+}
+
+.poke-bump-b {
+  animation: poke-bump-b 0.35s ease-out;
+}
+
+@keyframes poke-bump-b {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.94) rotate(1.5deg);
+  }
+  60% {
+    transform: scale(1.04) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
 }
 
 @keyframes streak-pop {
@@ -251,7 +270,8 @@
 @media (prefers-reduced-motion: reduce) {
   .ripple-ring,
   .poke-shake,
-  .poke-bump,
+  .poke-bump-a,
+  .poke-bump-b,
   .streak-pop {
     animation: none !important;
   }
