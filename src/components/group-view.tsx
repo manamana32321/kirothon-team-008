@@ -190,7 +190,7 @@ export function GroupView({ id }: { id: string }) {
       {rippleClass && (
         <div
           key={poked?.key ?? "calm"}
-          className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${rippleClass}`}
+          className={`pointer-events-none fixed inset-0 overflow-hidden ${poked ? "z-30" : "z-0"} ${rippleClass}`}
           aria-hidden
         >
           <span className="ripple-ring" />
@@ -207,7 +207,7 @@ export function GroupView({ id }: { id: string }) {
         <header className="flex items-start justify-between pt-4">
           <div>
             <p className="text-muted-foreground text-sm">운동기</p>
-            <h1 className="text-2xl font-bold">{group.name}</h1>
+            <h1 className="text-[28px]">{group.name}</h1>
           </div>
           <Link
             href={`/g/${id}/settings`}
@@ -365,7 +365,7 @@ function JoinInline({ group, onJoined }: { group: GroupState; onJoined: (memberI
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6 pt-12">
-      <h1 className="text-2xl font-bold">{group.name}에 참여</h1>
+      <h1 className="text-[28px]">{group.name}에 참여</h1>
       <div className="flex gap-2">
         <Input placeholder="내 닉네임" value={nickname} maxLength={20} onChange={(e) => setNickname(e.target.value)} />
         <Button disabled={!nickname.trim()} onClick={join}>

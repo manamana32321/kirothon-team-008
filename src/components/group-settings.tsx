@@ -16,7 +16,7 @@ import type { GroupState } from "@/lib/group-state";
 
 const MeetupMap = dynamic(() => import("@/components/meetup-map"), {
   ssr: false,
-  loading: () => <div className="bg-muted h-72 w-full animate-pulse rounded-lg" />,
+  loading: () => <div className="bg-muted h-72 w-full animate-pulse rounded-(--radius)" />,
 });
 
 const DEFAULT_CENTER: LatLng = { lat: 37.5665, lng: 126.978 };
@@ -60,7 +60,7 @@ export function GroupSettings({ id }: { id: string }) {
         </Link>
         <div>
           <p className="text-muted-foreground text-sm">{group.name}</p>
-          <h1 className="text-2xl font-bold">모임 설정</h1>
+          <h1 className="text-[28px]">모임 설정</h1>
         </div>
       </header>
 
@@ -247,7 +247,7 @@ function InviteSection({ group }: { group: GroupState }) {
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-3">
         {link && (
-          <div className="rounded-lg bg-white p-3">
+          <div className="rounded-(--radius) border-[3px] border-foreground bg-white p-3">
             <QRCodeSVG value={link} size={176} />
           </div>
         )}
