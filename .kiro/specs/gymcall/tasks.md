@@ -61,10 +61,11 @@
   - [ ] 7.2 카메라 끈 음성 클립, 무응답 10분 차감(시각 조작)을 확인한다.
     - _Requirements: 4.2, 5.2, 6.2_
 
-- [ ] 8. 배포 (7 이후, 17시 이후)
+- [x] 8. 배포 (7 이후, 17시 이후)
   - Dockerfile, `infra/k8s/` 매니페스트(replicas 1, Recreate, PVC, TLS Ingress). `.kiro/steering/deploy.md`를 따른다.
   - 실패하면 녹화 영상 링크로 대신한다.
   - _Requirements: N1_
+  - 완료: 2026-11-14 16:43 `deploy.md` 검증 4단계 통과(Pod Ready, ArgoCD 리비전 = main, 클러스터 내부 200, TLS Ready + 외부 200). 프로덕션 API E2E(가입, 참여, 클립, 찌르기, 응답, 차감, SSE) 통과
 
 - [ ] 9. 제출물
   - README 모든 섹션, BUILD_REPORT 최종 정리, `PRESENTATION.pdf`, 데모 영상 링크.
