@@ -33,6 +33,12 @@ function pokeOrigin(nickname: string) {
   return rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : {};
 }
 const POKE_VIBRATION = [120, 60, 120, 60, 240];
+
+function vibrate(pattern: number[]) {
+  const native = (window as { GymcallNative?: { vibrate(pattern: string): void } }).GymcallNative;
+  if (native) native.vibrate(pattern.join(","));
+  else navigator.vibrate?.(pattern);
+}
 const POKE_TONES = [1046, 1318];
 const STREAK_WINDOW_MS = 10_000;
 const STREAK_TIERS = [5, 10, 20] as const;
@@ -119,7 +125,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
 
   useEffect(() => {
     if (!poked) return;
-    navigator.vibrate?.(POKE_VIBRATION);
+    vibrate(POKE_VIBRATION);
     const ctx = audio ?? pokeAudio.current;
     if (ctx && ctx.state === "running") {
       POKE_TONES.forEach((freq, i) => {
