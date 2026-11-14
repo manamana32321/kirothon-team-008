@@ -1,5 +1,6 @@
 import { db } from "@/db";
-import { error, parseJson } from "@/lib/http";
+import { requireMember } from "@/lib/auth";
+import { parseJson } from "@/lib/http";
 import { pushSubscribeSchema } from "@/lib/schemas";
 
 export async function POST(
@@ -11,8 +12,8 @@ export async function POST(
   if ("response" in input) return input.response;
   const { memberId, subscription } = input.data;
 
-  const member = await db.member.findFirst({ where: { id: memberId, groupId: id }, select: { id: true } });
-  if (!member) return error(404, "그룹에 없는 멤버입니다");
+  const owner = await requireMember(request, id, memberId);
+  if ("response" in owner) return owner.response;
 
   const data = {
     memberId,
