@@ -1,5 +1,6 @@
 "use client";
 
+import { Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -100,12 +101,13 @@ export function MeetupTab({
       />
 
       {!group.meetup && (
-        <p className="text-muted-foreground text-xs">
-          <Link href={`/g/${group.id}/settings`} className="underline underline-offset-4">
-            설정
-          </Link>
-          에서 모임 장소를 정하면 도착할 때 자동으로 출석돼요.
-        </p>
+        <Link
+          href={`/g/${group.id}/settings`}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
+        >
+          <Settings className="size-3.5" aria-hidden />
+          모임 장소를 정하면 도착할 때 자동으로 출석돼요.
+        </Link>
       )}
 
       <div className="flex flex-col divide-y rounded-lg border px-3 text-sm">

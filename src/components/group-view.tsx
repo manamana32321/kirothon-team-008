@@ -1,12 +1,13 @@
 "use client";
 
+import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AlarmOverlay } from "@/components/alarm-overlay";
 import { ClipRecorder } from "@/components/clip-recorder";
 import { MeetupTab } from "@/components/meetup-tab";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -109,9 +110,11 @@ export function GroupView({ id }: { id: string }) {
         </div>
         <Link
           href={`/g/${id}/settings`}
-          className="text-muted-foreground hover:text-foreground pt-1 text-sm underline underline-offset-4"
+          aria-label="모임 설정"
+          title="모임 설정"
+          className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
         >
-          설정
+          <Settings className="size-5" />
         </Link>
       </header>
 

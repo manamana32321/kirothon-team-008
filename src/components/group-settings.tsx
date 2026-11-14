@@ -1,10 +1,11 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -48,14 +49,19 @@ export function GroupSettings({ id }: { id: string }) {
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-4">
-      <header className="flex items-center justify-between pt-4">
+      <header className="flex items-center gap-1 pt-4">
+        <Link
+          href={`/g/${id}`}
+          aria-label="그룹 화면으로 돌아가기"
+          title="돌아가기"
+          className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
         <div>
           <p className="text-muted-foreground text-sm">{group.name}</p>
           <h1 className="text-2xl font-bold">모임 설정</h1>
         </div>
-        <Link href={`/g/${id}`} className="text-sm underline underline-offset-4">
-          돌아가기
-        </Link>
       </header>
 
       <TimeSection key={`t-${group.alarmTime}`} group={group} />
