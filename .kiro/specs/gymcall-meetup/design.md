@@ -57,7 +57,7 @@ LLM은 쓰지 않는다. 모두 결정론 코드다.
 4. 메모리에 저장하고 `location.updated`를 발행한다.
 5. `shouldAutoAttend`가 참이면 Response(going, source auto)를 만들고 `response.created`를 발행한다. (memberId, date) unique 제약이 중복을 막는다 (R10.6).
 
-`shouldAutoAttend` 조건: 모임 장소 있음, 공유 시간대, `accuracyM <= meetupRadiusM`, `isInside`, 오늘 Response 없음, 오늘 PenaltyLog 없음 (R10.1-3).
+`shouldAutoAttend` 조건: 모임 장소 있음, 공유 시간대, `accuracyM <= meetupRadiusM`, `isInside`, 오늘 Response 없음, 오늘 PenaltyLog 없음 (R10.1-3). PenaltyLog는 지연 평가라 아직 안 생겼을 수 있으므로, 무응답 대기(10분)가 지났으면 PenaltyLog가 없어도 차감 확정으로 본다.
 
 ## SSE 이벤트
 `location.updated` 하나만 추가한다. 본 앱 규칙대로 "다시 불러오라"는 신호만 담는다. 화면은 `GET /locations`로 갱신하고, 신호가 몰리면 2초에 한 번만 불러온다.
