@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { send } from "@/lib/api-client";
-import { memberKey } from "@/lib/group-state";
+import { LAST_GROUP_KEY, memberKey } from "@/lib/group-state";
 
 type Joined = { groupId: string; memberId: string };
 
@@ -18,6 +18,12 @@ export default function Home() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (new URLSearchParams(location.search).has("new")) return;
+    const last = localStorage.getItem(LAST_GROUP_KEY);
+    if (last && localStorage.getItem(memberKey(last))) router.replace(`/g/${last}`);
+  }, [router]);
+
   async function enter(url: string, json: unknown) {
     setBusy(true);
     setError("");
@@ -25,6 +31,7 @@ export default function Home() {
     setBusy(false);
     if (result.error !== undefined) return setError(result.error);
     localStorage.setItem(memberKey(result.data.groupId), result.data.memberId);
+    localStorage.setItem(LAST_GROUP_KEY, result.data.groupId);
     router.push(`/g/${result.data.groupId}`);
   }
 

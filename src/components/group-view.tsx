@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldRing } from "@/lib/alarm";
 import { send } from "@/lib/api-client";
 import type { GroupEvent } from "@/lib/events";
-import { type GroupState, memberKey } from "@/lib/group-state";
+import { type GroupState, LAST_GROUP_KEY, memberKey } from "@/lib/group-state";
 import { useLocationSharing } from "@/lib/use-location-sharing";
 
 const EVENTS: GroupEvent[] = [
@@ -54,6 +54,10 @@ export function GroupView({ id }: { id: string }) {
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (memberId) localStorage.setItem(LAST_GROUP_KEY, id);
+  }, [id, memberId]);
 
   useEffect(() => {
     memberIdRef.current = memberId;
@@ -137,6 +141,7 @@ export function GroupView({ id }: { id: string }) {
         group={group}
         onJoined={(mid) => {
           localStorage.setItem(memberKey(id), mid);
+          localStorage.setItem(LAST_GROUP_KEY, id);
           setMemberId(mid);
         }}
       />
