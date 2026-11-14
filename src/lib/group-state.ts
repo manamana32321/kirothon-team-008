@@ -30,3 +30,5 @@ export type GroupState = {
 export function memberKey(groupId: string) {
   return `gymcall:member:${groupId}`;
 }
+
+export const LAST_GROUP_KEY = "gymcall:last-group";
