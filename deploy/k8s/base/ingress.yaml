@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wake-buddy
+  labels:
+    app.kubernetes.io/part-of: wake-buddy
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-dns01
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: wake.json-server.win
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wake-buddy
+                port:
+                  name: http
+  tls:
+    - secretName: wake-buddy-tls
+      hosts:
+        - wake.json-server.win

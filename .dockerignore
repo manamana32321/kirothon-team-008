@@ -1,0 +1,9 @@
+node_modules
+.next
+data
+src/generated
+.git
+.kiro
+*.db
+.env
+.env.*
