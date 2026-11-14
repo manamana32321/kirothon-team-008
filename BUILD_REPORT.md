@@ -16,6 +16,8 @@
 | 구현 | Spec (tasks 5) | API 7개 구현. 클립 선택 규칙(받는 사람의 가장 오래된 미사용 클립)을 서버 한 곳에 두고 `nextClip`으로 내려줌. dev 서버에 curl 시나리오로 생성·참여·409·404·400·클립 업로드/재생 바이트 일치·무응답 지연 차감·중복 차감 없음·SSE 이벤트 수신 확인 | `src/app/api/`, `src/lib/penalty-store.ts`, `src/lib/http.ts` |
 | 구현 | Spec (tasks 6) | 화면 4개 구현: 첫 화면(만들기/참여), 그룹 화면(알람 설정, 멤버 상태, 벌금 장부, SSE 갱신), 클립 녹화(카메라 토글, 카메라 거부 시 음성 전환, 10초 자동 정지), 알람 오버레이(클립 반복 재생, 없으면 WebAudio 비프, 간다/못 간다로 응답과 정지). API 응답 타입 `GroupState`를 서버와 화면이 같이 씀. lint, tsc, build, 페이지 200 확인 | `src/app/page.tsx`, `src/app/g/[id]/page.tsx`, `src/components/` |
 | 구현 | Spec (gymcall-meetup tasks 1-3) | 사용자가 작성한 부가 기능 spec(모임 지도, 자동 출석)의 로직, 데이터 모델, API 구현. 위치는 DB가 아니라 메모리에만 둠. 테스트 23개 추가(총 52개). dev 서버 curl로 409·400·429, 자동 출석, 못 간다 유지, 정확도 초과, 늦은 도착 무시, 시간대 종료 시 삭제, SSE `location.updated` 확인 | `src/lib/geo.ts`, `src/lib/meetup.ts`, `src/lib/locations.ts`, `src/app/api/groups/[id]/location*/`, `prisma/migrations/*_meetup/` |
+| 구현 | Spec (gymcall-meetup tasks 4) | 지도 화면: 현황/지도 탭, Leaflet + OSM(`next/dynamic` ssr 끔), 멤버 점과 60초 흐림, 공유 안 함 목록, 모임 장소 지정(지도 누르기, 50/100/200m), 위치 공유 스위치(권한 거부·시간대 밖 안내, 10초 묶음 전송, 끄거나 탭 닫으면 삭제), 자동 출석은 "도착"으로 표시. lint, tsc, build 통과 | `src/components/meetup-tab.tsx`, `src/components/meetup-map.tsx`, `src/lib/use-location-sharing.ts` |
+| 구현 | Spec (design 화면 원칙 갱신) | 모임 설정 화면 추가: 모임 시간, 벌금 켜기/끄기, 모임 장소 지정·삭제, 초대 QR(`qrcode.react`)과 코드·링크 복사. 그룹 화면은 알람 한 줄, 멤버 상태, 탭만 남김. `DELETE /meetup` 추가, 벌금 0이면 차감 기록 안 만듦. curl로 설정 페이지 200, 벌금 끔 상태에서 못 간다 응답 시 차감 0건, 장소 저장·삭제 확인 | `src/app/g/[id]/settings/`, `src/components/group-settings.tsx`, `.kiro/specs/gymcall/design.md` |
 | 구현 | Spec (tasks 8 준비) | 기능과 겹치지 않는 배포 준비를 먼저 진행: Dockerfile, GHCR Actions, Kustomize 매니페스트, 홈랩 ArgoCD Application과 DNS(별도 레포 PR) | `Dockerfile`, `.github/workflows/image.yml`, `infra/k8s/` |
 | 기타 | Steering | 이름과 아이콘 정의: 영어 Gymcall, 한국어 운동기, 아이콘 ㅇㄷㄱ | `.kiro/steering/product.md`, `src/app/icon.svg` |
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
@@ -31,6 +33,7 @@
 - 음성 녹음을 10초 영상으로 바꾸고, 카메라를 끄면 음성만 보내게 했다. 이유: 같은 `MediaRecorder` 흐름이라 구현 차이가 작고, 친구 얼굴이 뜨는 알람이 데모 효과가 크다. 영상과 음성은 Clip 모델 하나로 두고 mimeType만 다르게 저장한다.
 - 앱 이름을 가칭 wake-buddy에서 짐콜(Gymcall)로 정했다. 한국어 이름은 운동기, 아이콘은 친구에게 보내던 카톡 "ㅇㄷㄱ?"에서 따왔다. 이유: 깨우기만이 아니라 같이 운동하러 부르는 것이 핵심이고, 원래 쓰던 우회 행동을 그대로 이름에 남긴다.
 - 매니페스트 폴더를 `deploy/k8s/`에서 `infra/k8s/`로 옮겼다. 이유: 기존 AMANG 레포와 같은 구조로 맞춘다.
+- 설정 화면 `/g/[id]/settings`를 따로 만들었다. 모임 시간, 벌금(선택), 모임 장소(선택), 초대 코드와 QR을 그리로 옮겼다. 이유: 매일 아침 보는 그룹 화면의 인지 부하를 줄인다. 벌금을 끄면 포인트와 장부도 그룹 화면에서 숨긴다.
 - TWA/네이티브 대신 웹으로 정했다. 이유: TWA도 Chrome 엔진이라 백그라운드 알람과 자동 재생 제약이 같다.
 - LLM과 Bedrock을 뺐다. 이유: 비용과 키 관리 부담, 핵심 가치와 무관.
 - 벌금은 실제 결제 대신 가상 포인트 장부로 한정했다.
