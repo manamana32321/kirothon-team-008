@@ -6,7 +6,7 @@ import { usePush } from "@/lib/use-push";
 export function PushButton({ groupId, memberId }: { groupId: string; memberId: string }) {
   const { state, error, enable } = usePush(groupId, memberId);
 
-  if (state === "on") return null;
+  if (state === "on" || state === "native") return null;
   if (state === "unsupported") {
     return (
       <p className="text-muted-foreground bg-muted rounded-(--radius) border-[3px] border-foreground p-3 text-center text-sm">

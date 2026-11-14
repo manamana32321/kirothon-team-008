@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { send } from "@/lib/api-client";
 
-export type PushState = "unsupported" | "idle" | "on" | "denied";
+export type PushState = "unsupported" | "idle" | "on" | "denied" | "native";
 
 function toKey(base64: string): Uint8Array<ArrayBuffer> {
   const pad = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -21,6 +21,7 @@ export function usePush(groupId: string, memberId: string) {
       if (!cancelled) setState(next);
     };
     (async () => {
+      if ("GymcallNative" in window) return apply("native");
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) return apply("unsupported");
       if (Notification.permission === "denied") return apply("denied");
       const reg = await navigator.serviceWorker.getRegistration("/sw.js");

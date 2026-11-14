@@ -29,7 +29,9 @@ COPY --from=migrate /migrate/node_modules /migrate/node_modules
 COPY --from=build /app/prisma /migrate/prisma
 COPY --from=build /app/prisma.config.ts /migrate/prisma.config.ts
 COPY --from=build /app/src/lib/config.ts /migrate/src/lib/config.ts
+RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /app/data && chown -R node:node /app/data
 USER node
 EXPOSE 3000
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["sh", "-c", "cd /migrate && ./node_modules/.bin/prisma migrate deploy && cd /app && exec node server.js"]
