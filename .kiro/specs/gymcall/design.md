@@ -57,6 +57,8 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 
 - 입력은 Zod로 검증한다. 스키마는 `lib/schemas.ts` 한 곳에만 정의하고 클라이언트도 같은 것을 쓴다.
 - 무응답 확정은 `GET /api/groups/:id`가 호출될 때 지연 평가한다. 별도 스케줄러를 두지 않는다. 확정되면 PenaltyLog를 만들고 `penalty.applied`를 발행한다.
+- 재생할 클립은 서버가 고른다. 받는 사람의 미사용 클립 중 가장 오래된 것을 `GET /api/groups/:id`가 멤버별 `nextClip`으로 내려주고, `respond`가 같은 규칙으로 그 클립의 usedDate를 채운다.
+- 시작 포인트는 그룹 생성 시 100, 차감량 기본값은 10이다. 차감량은 알람 설정에서 바꾼다.
 
 ## SSE 이벤트
 `group.updated`, `response.created`, `clip.created`, `penalty.applied`.
