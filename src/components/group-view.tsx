@@ -309,23 +309,24 @@ export function GroupView({ id }: { id: string }) {
           {sentNotice && <p className="text-muted-foreground text-center text-sm">{sentNotice}</p>}
           <div className="relative">
             {streak >= 2 && (
-              <span
-                key={`streak-${streak}`}
-                aria-live="polite"
-                className={`${
-                  (STREAK_TIERS as readonly number[]).includes(streak) ? "streak-levelup" : "streak-pop"
-                } pointer-events-none absolute -top-3 -left-2 z-10`}
-              >
+              <span aria-live="polite" className="pointer-events-none absolute -top-3 -left-2 z-10">
                 <span
-                  className={`streak-badge ${streakTier(streak)} flex items-center gap-0.5 rounded-full px-2.5 py-0.5 font-black text-white tabular-nums`}
+                  className={`streak-badge ${streakTier(streak)} px-2.5 py-0.5 font-black text-white tabular-nums`}
                 >
-                  {streak >= STREAK_TIERS[1] && (
-                    <Flame
-                      className={`size-4 ${streak === STREAK_TIERS[1] ? "streak-flame-in" : ""}`}
-                      aria-hidden
-                    />
+                  <span className="streak-bg streak-bg-1" />
+                  <span className="streak-bg streak-bg-2" />
+                  <span className="streak-bg streak-bg-3" />
+                  <span className="streak-bg streak-bg-4" />
+                  <span className="streak-content">
+                    <Flame className="streak-flame size-4" aria-hidden />
+                    <span key={streak} className="streak-num">
+                      {streak}
+                    </span>
+                    연타
+                  </span>
+                  {(STREAK_TIERS as readonly number[]).includes(streak) && (
+                    <span key={`burst-${streak}`} className="streak-burst" />
                   )}
-                  {streak}연타
                 </span>
               </span>
             )}
