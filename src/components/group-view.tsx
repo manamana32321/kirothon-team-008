@@ -39,6 +39,7 @@ export function GroupView({ id }: { id: string }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [poked, setPoked] = useState<{ from: string; key: string } | null>(null);
   const [sentNotice, setSentNotice] = useState("");
+  const [bump, setBump] = useState(0);
   const [locationVersion, setLocationVersion] = useState(0);
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
@@ -148,7 +149,7 @@ export function GroupView({ id }: { id: string }) {
       json: { fromMemberId: me!.id, toMemberIds },
     });
     if (result.error !== undefined) return setSentNotice(result.error);
-    setSelected(new Set());
+    setBump((n) => n + 1);
     setSentNotice(`${toMemberIds.length}명을 찔렀어요`);
   }
 
@@ -288,9 +289,10 @@ export function GroupView({ id }: { id: string }) {
           )}
           {sentNotice && <p className="text-muted-foreground text-center text-sm">{sentNotice}</p>}
           <Button
+            key={bump}
             size="lg"
             variant={ringing ? "outline" : "default"}
-            className="h-12 text-base"
+            className={`h-12 text-base transition-transform active:scale-95 ${bump > 0 ? "poke-bump" : ""}`}
             disabled={selected.size === 0}
             onClick={poke}
           >
