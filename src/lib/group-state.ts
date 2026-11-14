@@ -15,7 +15,7 @@ export type GroupState = {
     points: number;
     status: AttendanceStatus;
     source: "manual" | "auto" | null;
-    clip: { id: string; mimeType: string; hasVideo: boolean } | null;
+    clips: { id: string; mimeType: string; hasVideo: boolean }[];
     lastPoke: { at: string; fromNickname: string } | null;
   }[];
   penalties: {

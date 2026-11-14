@@ -169,7 +169,7 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const ringing = !!group && !!me && shouldRing(now, group.alarmTime, responded);
   const currentChoice =
     myChoice ?? (me?.status === "going" || me?.status === "skipping" ? me.status : null);
-  const anyClipSound = !!group?.members.some((m) => m.id !== memberId && m.clip);
+  const anyClipSound = !!group?.members.some((m) => m.id !== memberId && m.clips.length > 0);
 
   useEffect(() => {
     const ctx = pokeAudio.current;
