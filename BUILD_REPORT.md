@@ -9,6 +9,7 @@
 | 설계 | Spec (design) | 데이터 모델, API, SSE 이벤트, 알람 재생 흐름 작성. Crew 에이전트가 Spec 형식에 맞춰 작성 | `.kiro/specs/gymcall/design.md` |
 | 설계 | Spec (tasks) | 9개 작업으로 분해. 하위 작업마다 요구사항 번호 연결, 병렬 가능 구간 표시. Crew 에이전트가 Spec 형식에 맞춰 작성 | `.kiro/specs/gymcall/tasks.md` |
 | 설계 | Steering | 웹 앱, SSE, MediaRecorder, SQLite 스택과 폴더 구조 정의 | `.kiro/steering/tech.md`, `.kiro/steering/structure.md` |
+| 설계 | Steering | 개발자 개인 작업 규칙(Compiled AI, SSOT, 범위 밖 수정 금지, 근본 원인 우선)을 워크스페이스 steering으로 공개. 개인 신상은 제외 | `.kiro/steering/user-context.md` |
 | 설계 | Steering | 개인 하네스(karpathy 규칙)를 Kiro 형식으로 이식 | `.kiro/steering/behavior.md` |
 | 설계 | Steering | 홈랩 k8s/ArgoCD 배포 규칙 정의 | `.kiro/steering/deploy.md` |
 | 구현 | Spec (tasks 1) | 작업 1 골격: Next.js 16 + Tailwind 4 + shadcn/ui, Prisma 7 + SQLite(better-sqlite3 어댑터), Zod, Vitest. lint, tsc, build, 페이지 응답 확인 | `package.json`, `prisma.config.ts`, `src/db.ts` |
