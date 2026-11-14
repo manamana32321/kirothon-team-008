@@ -124,14 +124,16 @@ export function MemberCard({
           ))}
         </div>
       )}
-      {clips.length > 1 && (
-        <span className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center gap-1">
-          {clips.map((c, i) => (
-            <span
-              key={c.id}
-              className={`size-1.5 rounded-full border border-foreground ${i === index ? "bg-primary" : "bg-card"}`}
-            />
-          ))}
+      {clips.length > 0 && (
+        <span className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center">
+          <span className="flex gap-1.5">
+            {clips.map((c, i) => (
+              <span
+                key={c.id}
+                className={`size-2.5 rounded-full border-2 border-foreground ${i === index ? "bg-primary" : "bg-card"}`}
+              />
+            ))}
+          </span>
         </span>
       )}
 
