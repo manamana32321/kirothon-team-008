@@ -42,7 +42,6 @@ export function GroupView({ id }: { id: string }) {
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
-  const lastPokeAt = useRef(0);
   const [locationVersion, setLocationVersion] = useState(0);
   const sharing = useLocationSharing(id, memberId ?? "", group?.alarmTime ?? null);
   const memberIdRef = useRef(memberId);
@@ -158,9 +157,7 @@ export function GroupView({ id }: { id: string }) {
       json: { fromMemberId: me!.id, toMemberIds },
     });
     if (result.error !== undefined) return setSentNotice(result.error);
-    const at = Date.now();
-    setStreak((s) => (at - lastPokeAt.current < STREAK_WINDOW_MS ? s + 1 : 1));
-    lastPokeAt.current = at;
+    setStreak((s) => s + 1);
     setBump((n) => n + 1);
     setSentNotice(`${toMemberIds.length}명을 찔렀어요`);
   }
