@@ -11,6 +11,7 @@
 | 구현 | Hooks (Stop) | 코드 변경 시 BUILD_REPORT와 문서 갱신을 점검 | `.kiro/hooks/doc-sync.json`, `.kiro/hooks/doc-sync.sh` |
 | 검증 | Hooks (PreToolUse) | 시크릿 유출 차단. kiro-cli 3.3.0에서 가짜 AWS 키 쓰기 차단, 평문 통과 확인 | `.kiro/hooks/secret-guard.json`, `.kiro/hooks/secret-guard.sh` |
 | 검증 | Hooks (Stop) | doc-sync 훅이 에이전트의 BUILD_REPORT 갱신을 실제로 유도함을 확인 | `.kiro/hooks/doc-sync.json` |
+| 기타 | Steering + Hooks | 개인 worktree 규칙과 main 직접 커밋/push 차단 훅 이식. 스크립트 단독 시험만 완료, Kiro 실행 시험은 아직 | `.kiro/steering/worktree.md`, `.kiro/hooks/main-branch-guard.json` |
 
 Spec(requirements, design, tasks)은 아직 작성 전이다.
 

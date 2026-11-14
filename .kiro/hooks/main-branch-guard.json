@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "main-branch-guard",
+      "trigger": "PreToolUse",
+      "action": {
+        "type": "command",
+        "command": "bash .kiro/hooks/main-branch-guard.sh"
+      }
+    }
+  ]
+}
