@@ -31,3 +31,5 @@ data/
 next-env.d.ts
 src/generated/
 .tmp/
+*.code-workspace
+!*.code-workspace.example
