@@ -2,6 +2,8 @@
 
 요구사항: `.kiro/specs/gymcall/requirements.md`. 스택은 `.kiro/steering/tech.md`를 따른다.
 
+> 바뀜 (2026-11-16): 계정(R7)과 탭 밖 알림(R8)을 반영했다. 데이터 모델 표는 `prisma/schema.prisma`와 겹쳐 틀어지므로 설계상 제약만 남겼다. 받는 사람별 `nextClip`/`usedDate` 규칙은 쓰지 않는다.
+
 ## 임시값 (열린 질문)
 - 무응답 확정 대기: 알람 시각 후 10분. 상수 `NO_RESPONSE_MINUTES` 한 곳에 둔다.
 - 알람 반복: 매일 반복. 요일 설정은 MVP에서 뺀다. 알람은 시각(HH:MM)만 가진다.
@@ -10,12 +12,14 @@
 
 ```
 브라우저 A ──POST──> Route Handlers ──> Prisma(SQLite)
-브라우저 B <──SSE─── /api/events   <── events.ts (프로세스 내 pub/sub)
-브라우저 ──클립 업로드──> /api/clips ──> data/clips/
+브라우저 B <──SSE─── /api/groups/:id/events <── events.ts (프로세스 내 pub/sub)
+브라우저 ──클립 업로드──> /api/groups/:id/clips ──> data/clips/
+서버 타이머(alarm-push.ts) ──웹 푸시──> 탭을 닫은 브라우저
+안드로이드 AlarmWatchService ──10초 폴링──> /api/auth/me, /api/groups/:id
 ```
 
 - 서버는 단일 프로세스다. SSE 구독자 목록이 메모리에 있으므로 replicas는 1이다.
-- 알람 시각 판정은 각 브라우저가 한다. 서버가 푸시하지 않는다. 탭이 닫히면 울리지 않는다.
+- 알람 소리는 열린 화면이 스스로 판정해 낸다. 탭이 닫혀 있으면 서버가 웹 푸시 알림만 보낸다 (아래 "탭 밖 알림").
 - 상태 변경이 생기면 서버가 그룹 단위로 SSE 이벤트를 발행한다.
 
 ## 코드와 판단 위치
@@ -28,17 +32,18 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 | `lib/penalty.ts` | 확정된 불참 목록으로 포인트 차감 계산 |
 | `lib/clip.ts` | 녹화 형식 선택, 영상/음성 판정 |
 | `lib/events.ts` | 그룹별 SSE 구독과 발행 |
+| `lib/auth.ts` | 비밀번호 해시, 쿠키 세션, API 권한 확인 |
+| `lib/alarm-push.ts` | 알람 시각에 미응답 멤버에게 웹 푸시 |
 
 ## 데이터 모델 (Prisma)
 
-| 모델 | 필드 | 메모 |
-|---|---|---|
-| Group | id, name, inviteCode(unique), alarmTime(nullable), startPoints, penaltyPoints | alarmTime은 "HH:MM" |
-| Member | id, groupId, nickname, points | (groupId, nickname) unique |
-| Response | id, memberId, date, choice(going/skipping), createdAt | (memberId, date) unique |
-| Clip | id, groupId, fromMemberId, toMemberId, filePath, mimeType, hasVideo, createdAt, usedDate(nullable) | 영상과 음성을 한 모델로 둔다. 받는 사람의 다음 알람에 쓰면 usedDate를 채움 |
-| PenaltyLog | id, memberId, date, points, reason | (memberId, date) unique. 중복 차감 방지 |
+필드 정의의 정본은 `prisma/schema.prisma`다. 여기에는 설계상 이유가 있는 제약만 적는다.
 
+- `Response`와 `PenaltyLog`는 `(memberId, date)` unique. 하루 한 응답, 하루 한 차감. 무응답 차감을 여러 번 평가해도 한 번만 깎인다.
+- `Member`는 `(groupId, userId)` unique. 한 계정은 그룹마다 멤버 하나다. `userId`가 비어 있는 멤버는 로그인 도입 전 데이터이고, 같은 닉네임 계정이 참여하면 그 멤버를 이어받는다.
+- `AuthSession`에는 토큰의 SHA-256 해시만 둔다. 원문 토큰은 쿠키에만 있다.
+- `Clip.toMemberId`는 쓰지 않는다(항상 비움). 클립은 보낸 멤버의 카드에 걸린다.
+- `WakeCall`은 찌르기 기록이다. `PushSubscription`은 `endpoint` unique.
 - `date`는 알람이 울리는 날의 로컬 날짜 `YYYY-MM-DD`다.
 - 불참 확정은 "skipping 응답" 또는 "알람 시각 + 10분이 지났는데 응답 없음"이다.
 
@@ -46,29 +51,39 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 
 | 메서드 경로 | 요구사항 | 동작 |
 |---|---|---|
+| POST `/api/auth/signup` | R7 | 가입하고 세션 쿠키 발급. 중복 닉네임은 409 |
+| POST `/api/auth/login` | R7 | 로그인. 틀리면 401 |
+| POST `/api/auth/logout` | R7 | 세션 삭제 |
+| GET `/api/auth/me` | R7 | 내 계정과 내 그룹 목록. 로그인 전이면 `{ user: null }` |
 | POST `/api/groups` | R1 | 그룹과 첫 멤버 생성, 초대 코드 발급 |
-| POST `/api/groups/join` | R1 | 코드와 닉네임으로 참여. 없는 코드는 404, 중복 닉네임은 409 |
+| POST `/api/groups/join` | R1 | 초대 코드 또는 그룹 id로 참여. 없으면 404, 이미 멤버면 그 멤버를 돌려줌 |
+| GET `/api/groups/:id/preview` | R1 | 그룹 링크로 들어온 비멤버에게 그룹 이름만 보임 |
 | GET `/api/groups/:id` | R5, R6 | 그룹, 멤버, 오늘 상태, 포인트 |
 | PUT `/api/groups/:id/alarm` | R2 | 알람 시각과 벌금 설정. `group.updated` 발행 |
 | POST `/api/groups/:id/respond` | R3 | 오늘 응답 기록. skipping이면 즉시 차감. `response.created` 발행 |
+| DELETE `/api/groups/:id/respond` | — | 시연용 임시 기능. 오늘 응답을 지우고 No Go 차감을 돌려줌 |
 | POST `/api/groups/:id/clips` | R4 | multipart 업로드. 10초, 8MB 이하, `video/*` 또는 `audio/*`만 허용. `clip.created` 발행 |
-| GET `/api/clips/:id` | R4 | 저장된 mimeType으로 스트림 |
+| GET `/api/clips/:id` | R4, R7 | 저장된 mimeType으로 스트림. 그 그룹 멤버만 |
+| POST `/api/groups/:id/poke` | R5 | 아래 "찌르기" |
 | GET `/api/groups/:id/events` | R2, R3, R5 | SSE 스트림 |
+| GET `/api/push/key` | R8 | VAPID 공개키 |
+| POST `/api/groups/:id/push` | R8 | 내 멤버의 푸시 구독 저장 |
 
+- 모임 장소와 위치 API는 `.kiro/specs/gymcall-meetup/design.md`에 있다.
+- 가입, 로그인, `auth/me`, `push/key` 말고는 모두 로그인이 필요하다. 멤버 id를 받는 API는 그 멤버가 내 것인지(`requireMember`), 그룹 API는 내가 그 그룹 멤버인지(`requireGroupMember`) 확인한다.
 - 입력은 Zod로 검증한다. 스키마는 `lib/schemas.ts` 한 곳에만 정의하고 클라이언트도 같은 것을 쓴다.
 - 무응답 확정은 `GET /api/groups/:id`가 호출될 때 지연 평가한다. 별도 스케줄러를 두지 않는다. 확정되면 PenaltyLog를 만들고 `penalty.applied`를 발행한다.
-- 재생할 클립은 서버가 고른다. 받는 사람의 미사용 클립 중 가장 오래된 것을 `GET /api/groups/:id`가 멤버별 `nextClip`으로 내려주고, `respond`가 같은 규칙으로 그 클립의 usedDate를 채운다.
 - 시작 포인트는 그룹 생성 시 100, 차감량 기본값은 10이다. 차감량은 알람 설정에서 바꾼다.
 
 ## SSE 이벤트
-`group.updated`, `response.created`, `clip.created`, `penalty.applied`.
+`group.updated`, `response.created`, `clip.created`, `penalty.applied`, `poke.sent`, `location.updated`.
 이벤트는 "다시 불러오라"는 신호만 담고, 화면은 `GET /api/groups/:id`로 상태를 갱신한다. 상태 정의가 한 곳에 남는다.
 
 ## 화면
 원칙: 매일 보는 그룹 화면에는 "오늘 할 일"만 둔다. 가끔 바꾸는 값은 설정 화면으로 뺀다. 아침에 보는 사람의 인지 부하를 줄이기 위해서다.
 
-- `/` 그룹 만들기, 코드로 참여
-- `/g/[id]` 그룹 화면 (매일, 셋로그식 카드 그리드)
+- `/` 로그인·가입, 내 그룹 목록, 그룹 만들기, 코드로 참여
+- `/g/[id]` 그룹 화면 (매일, 셋로그식 카드 그리드). 멤버가 아니면 그룹 이름과 참여 버튼만 보인다
   - 알람 시각 한 줄. 시각이 없으면 설정으로 가는 안내 하나. "알람 켜기" 버튼은 없다(앱은 WebView 설정으로 자동 재생, 브라우저는 첫 터치로 소리 허락)
   - 멤버 카드 2열 그리드. 내 카드가 맨 앞. 각 카드는 그 멤버의 최근 클립을 소리 없이 반복 재생하고 닉네임과 상태를 보인다. 벌금이 켜져 있을 때만 포인트와 벌금 장부를 보인다
   - 다른 멤버 카드는 눌러서 고른다(토글). 내 카드는 누르면 "클립 만들기" 버튼이 겹쳐 보인다
@@ -107,6 +122,12 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 3. 울려야 하면 그룹 화면에 잔잔한 파장이 퍼지고, 다른 멤버 카드의 클립 소리를 켠다. 들을 클립이 하나도 없으면 기본 알람음(WebAudio)을 쓴다.
 4. 사용자가 "Go / No Go"를 누르면 `respond`를 호출하고 소리와 파장을 멈춘다. 같은 날 다시 누르면 응답을 바꾼다(`respond`는 새로 만들면 201, 바꾸면 200). No Go → Go면 그날 skipping 차감을 지우고 포인트를 돌려준다.
 5. 같은 날짜 키로는 다시 울리지 않는다. 이미 응답했으면(응답을 바꿔도) 울리지 않는다.
+
+## 탭 밖 알림
+- 서버가 시작될 때 `instrumentation.ts`가 `alarm-push.ts` 타이머를 켠다. 20초마다 지금 시각(HH:MM)이 알람인 그룹을 찾아, 오늘 응답이 없는 멤버의 구독으로 푸시를 보낸다. 같은 날 같은 멤버에게는 한 번만 보낸다(메모리 기록).
+- 찌르기도 받은 멤버에게 푸시를 보낸다.
+- VAPID 키는 env가 없으면 `data/vapid.json`에 한 번 만들어 계속 쓴다. 만료된 구독(404, 410)은 지운다.
+- 안드로이드 앱은 웹 푸시 대신 `AlarmWatchService`(포그라운드 서비스)를 쓴다. WebView 쿠키로 10초마다 `auth/me`와 `groups/:id`를 불러, 내 상태가 `pending`이고 알람 시각이 지났으면 화면 위 오버레이에 알람과 Go / No Go를 띄운다. `lastPoke`가 바뀌면 진동한다.
 
 ## 찌르기
 - `POST /api/groups/:id/poke` `{ fromMemberId, toMemberIds[] }`. 자기 자신 400, 그룹 밖 멤버 404. `WakeCall` 테이블에 한 줄씩 남기고 `poke.sent`를 발행한다.

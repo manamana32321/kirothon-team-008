@@ -8,7 +8,7 @@ Kiro Crew 세션에서 Claude Code로 넘기며 남기는 상태. 다 쓰면 이
 |---|---|
 | 해커톤 | 2026-11-14 18:00 제출 완료 (team-008 · 1398). 마지막 심사 커밋 `017c0c6` |
 | 배포 | [gymcall.json-server.win](https://gymcall.json-server.win). 홈랩 K3s, ns `gymcall` |
-| 파이프라인 | `main` push → `.github/workflows/image.yml` → `ghcr.io/manamana32321/kirothon-team-008:latest` → ArgoCD Image Updater(digest) → 롤아웃 |
+| 파이프라인 | `main` push → `.github/workflows/image.yml`(verify 통과 후 build) → GHCR에 `:<커밋 SHA>`와 `:latest` → ArgoCD Image Updater가 SHA 태그 중 최신을 골라 Application에 기록(`write-back-method: argocd`, Git에는 안 남음) → 롤아웃. base의 `:latest`는 자리 표시 |
 | ArgoCD Application | 홈랩 레포 `k8s/argocd/applications/apps/gymcall.yaml`, 소스는 이 레포 `infra/k8s/overlays/prod` |
 | DNS | 홈랩 레포 `cloudflare/dns.tf`의 `gymcall` CNAME (Terraform, 적용됨) |
 | 테스트 | Vitest 52개 (결정론 로직만) |
@@ -20,7 +20,6 @@ Kiro Crew 세션에서 Claude Code로 넘기며 남기는 상태. 다 쓰면 이
 2. 안드로이드 앱 재빌드 후 확인: 하단 시스템 바 가림 수정(`MainActivity` WindowInsets), 터치 없는 소리 재생(`setMediaPlaybackRequiresUserGesture(false)`). PR #36에서 코드만 바꾸고 기기 확인 못 함
 3. `main-branch-guard`, `visual-check` 훅은 스크립트 단독 시험만 했고 Kiro 안에서 실제로 도는지 확인 못 함 (Claude Code로 옮기면 의미 없음)
 4. README "다음": 실제 친구와 2주 사용 후 답장 대기 57%가 얼마나 줄었는지 측정, iOS 앱
-5. 오래된 워크트리 정리: `debug-reset`, `meetup-spec`, `wakeup`, `wakeup-spec` (다른 세션이 만든 것, 브랜치 머지 여부 확인 후 지울 것)
 
 ## 함정 (실제로 걸렸던 것)
 
