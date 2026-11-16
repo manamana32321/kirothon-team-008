@@ -70,3 +70,7 @@
 - [ ] 9. 제출물
   - README 모든 섹션, BUILD_REPORT 최종 정리, `PRESENTATION.pdf`, 데모 영상 링크.
   - 18:00 전 push.
+
+- [x] 10. 클립 하루 단위 (해커톤 이후)
+  - `lib/clip.ts` `clipDay`/`clipDayRange`(새벽 4시 경계)와 테스트. `GET /api/groups/:id`는 오늘 클립만, `GET /api/groups/:id/clips?date=`로 지난 날 조회. 그룹 화면 헤더 달력(shadcn Calendar)과 "오늘로" 띠. 클립 날짜가 바뀌면 다시 불러온다.
+  - _Requirements: 4.12, 4.13_

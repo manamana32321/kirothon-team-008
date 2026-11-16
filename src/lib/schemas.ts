@@ -40,6 +40,8 @@ export const clipMetaSchema = z.object({
   size: z.number().int().positive().max(MAX_CLIP_BYTES),
 });
 
+export const clipDaySchema = z.iso.date();
+
 const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, Flame, Settings } from "lucide-react";
+import { CalendarDays, ChevronLeft, Flame, Settings } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
+import { ClipCalendar } from "@/components/clip-calendar";
 import { ClipRecorder } from "@/components/clip-recorder";
 import { LoadError } from "@/components/load-error";
 import { MemberCard } from "@/components/member-card";
@@ -14,8 +15,9 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PushButton } from "@/components/push-button";
 import { shouldRing } from "@/lib/alarm";
 import { isRetryable, send } from "@/lib/api-client";
+import { clipDay } from "@/lib/clip";
 import type { GroupEvent } from "@/lib/events";
-import type { GroupState } from "@/lib/group-state";
+import type { ClipHistory, GroupState } from "@/lib/group-state";
 import { useMe } from "@/lib/use-me";
 
 const EVENTS: GroupEvent[] = [
@@ -84,6 +86,9 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const [sentNotice, setSentNotice] = useState("");
   const [bump, setBump] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [calendarDays, setCalendarDays] = useState<string[] | null>(null);
+  const [viewDay, setViewDay] = useState<string | null>(null);
+  const [pastClips, setPastClips] = useState<ClipHistory["members"]>([]);
   const memberIdRef = useRef(memberId);
   const seenPoke = useRef<string | null | undefined>(undefined);
 
@@ -121,6 +126,14 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const today = clipDay(now);
+  const loadedDay = useRef(today);
+  useEffect(() => {
+    if (loadedDay.current === today) return;
+    loadedDay.current = today;
+    load();
+  }, [today, load]);
 
   useEffect(() => {
     const ctx = new AudioContext();
@@ -246,6 +259,26 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
     });
   }
 
+  async function toggleCalendar() {
+    if (calendarDays) return setCalendarDays(null);
+    const res = await send<ClipHistory>(`/api/groups/${id}/clips`, { method: "GET" });
+    if (res.error !== undefined) return setSentNotice(res.error);
+    setCalendarDays(res.data.days);
+  }
+
+  async function pickDay(day: string) {
+    setCalendarDays(null);
+    if (day === today) return setViewDay(null);
+    setViewDay(day);
+    setPastClips([]);
+    const res = await send<ClipHistory>(`/api/groups/${id}/clips?date=${day}`, { method: "GET" });
+    if (res.error !== undefined) {
+      setViewDay(null);
+      return setSentNotice(res.error);
+    }
+    setPastClips(res.data.members);
+  }
+
   function toggle(memberId: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -258,6 +291,10 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
   const penaltyOn = group.penaltyPoints > 0 || group.penalties.length > 0;
   const rippleClass = poked ? "ripple-strong" : ringing ? "ripple-calm" : "";
   const ordered = [me, ...group.members.filter((m) => m.id !== me.id)];
+  const shownDay = ringing ? null : viewDay;
+  const shown = shownDay
+    ? ordered.map((m) => ({ ...m, clips: pastClips.find((p) => p.id === m.id)?.clips ?? [] }))
+    : ordered;
 
   return (
     <>
@@ -299,15 +336,31 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
               <h1 className="text-[28px]">{group.name}</h1>
             </div>
           </div>
-          <Link
-            href={`/g/${id}/settings`}
-            aria-label="모임 설정"
-            title="모임 설정"
-            className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
-          >
-            <Settings className="size-5" />
-          </Link>
+          <div className="flex items-start">
+            <Button
+              variant="ghost"
+              size="icon-lg"
+              aria-label="지난 클립 보기"
+              title="지난 클립 보기"
+              aria-expanded={calendarDays !== null}
+              onClick={toggleCalendar}
+            >
+              <CalendarDays className="size-5" />
+            </Button>
+            <Link
+              href={`/g/${id}/settings`}
+              aria-label="모임 설정"
+              title="모임 설정"
+              className={buttonVariants({ variant: "ghost", size: "icon-lg" })}
+            >
+              <Settings className="size-5" />
+            </Link>
+          </div>
         </header>
+
+        {calendarDays && (
+          <ClipCalendar days={calendarDays} selected={shownDay ?? today} today={today} onSelect={pickDay} />
+        )}
 
         {group.alarmTime === null ? (
           <Link href={`/g/${id}/settings`} className="bg-muted rounded-(--radius) border-[3px] border-foreground p-4 text-center font-medium">
@@ -333,10 +386,20 @@ function MemberGroupView({ id, memberId }: { id: string; memberId: string }) {
 
         <Tabs defaultValue="status">
           <TabsContent value="status" className="flex flex-col gap-4">
+            {shownDay && (
+              <div className="bg-accent flex items-center justify-between gap-2 rounded-(--radius) border-[3px] border-foreground p-2 pl-3">
+                <span className="text-sm font-semibold">
+                  {Number(shownDay.slice(5, 7))}월 {Number(shownDay.slice(8, 10))}일 클립
+                </span>
+                <Button size="sm" variant="outline" onClick={() => setViewDay(null)}>
+                  오늘로
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
-              {ordered.map((m) => (
+              {shown.map((m) => (
                 <MemberCard
-                  key={m.id}
+                  key={`${m.id}:${shownDay ?? today}`}
                   member={m}
                   isMe={m.id === me.id}
                   selected={selected.has(m.id)}

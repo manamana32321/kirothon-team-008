@@ -2,11 +2,13 @@ import { db } from "@/db";
 import { requireGroupMember } from "@/lib/auth";
 import { dateKey } from "@/lib/alarm";
 import { attendanceStatuses } from "@/lib/attendance";
+import { clipDay, clipDayRange } from "@/lib/clip";
 import type { GroupState } from "@/lib/group-state";
 import { error } from "@/lib/http";
 import { recordAbsences } from "@/lib/penalty-store";
 
-async function loadGroup(id: string, date: string) {
+async function loadGroup(id: string, date: string, now: Date) {
+  const { start, end } = clipDayRange(clipDay(now));
   return db.group.findUnique({
     where: { id },
     include: {
@@ -15,6 +17,7 @@ async function loadGroup(id: string, date: string) {
         include: {
           responses: { where: { date } },
           clipsSent: {
+            where: { createdAt: { gte: start, lt: end } },
             orderBy: { createdAt: "desc" },
             take: 5,
           },
@@ -39,7 +42,7 @@ export async function GET(
   const now = new Date();
   const date = dateKey(now);
 
-  let group = await loadGroup(id, date);
+  let group = await loadGroup(id, date, now);
   if (!group) return error(404, "없는 그룹입니다");
 
   const statuses = attendanceStatuses(
@@ -56,7 +59,7 @@ export async function GET(
     .filter((m) => statuses[m.id] === "no_response")
     .map((m) => ({ memberId: m.id, date, reason: "no_response" as const }));
   if ((await recordAbsences(group.id, group.penaltyPoints, absences)) > 0) {
-    group = (await loadGroup(id, date))!;
+    group = (await loadGroup(id, date, now))!;
   }
 
   const penalties = await db.penaltyLog.findMany({
