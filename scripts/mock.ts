@@ -102,12 +102,11 @@ async function seed() {
   await call("PUT", `/api/groups/${created.groupId}/alarm`, cookies[owner], { alarmTime, penaltyPoints: 10 });
 
   let clips = 0;
-  let turn = 0;
   for (let d = days - 1; d >= 0; d--) {
     for (const [i, m] of MOCK_MEMBERS.entries()) {
       const count = 1 + ((i + d) % 2);
       for (let k = 0; k < count; k++) {
-        const video = videos.length > 0 ? videos[turn++ % videos.length] : null;
+        const video = videos.length > 0 ? videos[(i + d + count - 1 - k) % videos.length] : null;
         const clip = video ? readFileSync(video) : makeClip(m.color);
         if (!clip) continue;
         const type = video ? "video/mp4" : "video/webm";
