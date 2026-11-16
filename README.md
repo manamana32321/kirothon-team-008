@@ -137,7 +137,7 @@ docker run -p 3000:3000 -v gymcall-data:/app/data -e TZ=Asia/Seoul gymcall
 ```bash
 TZ=Asia/Seoul pnpm test
 pnpm lint
-pnpm exec tsc --noEmit
+pnpm typecheck
 ```
 
 API는 PR마다 dev 서버에 curl 시나리오로 확인했다(각 PR 본문의 "검증" 참고). 화면 변경은 `.kiro/hooks/visual-check.json` 훅이 사람 눈 확인을 요구한다.

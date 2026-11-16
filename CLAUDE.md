@@ -54,5 +54,5 @@ pnpm install
 pnpm db:migrate
 TZ=Asia/Seoul pnpm dev
 TZ=Asia/Seoul pnpm test
-pnpm lint && pnpm exec tsc --noEmit
+pnpm lint && pnpm typecheck
 ```
