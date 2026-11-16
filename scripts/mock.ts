@@ -1,6 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import Database from "better-sqlite3";
+import { clipDay, clipDayRange } from "../src/lib/clip";
+import { DATABASE_URL } from "../src/lib/config";
 
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 const STATE_FILE = path.join("data", "mock.json");
@@ -60,8 +63,25 @@ function makeClip(color: string): Buffer | null {
   }
 }
 
+function pastDay(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return clipDay(d);
+}
+
+function backdate(clipId: string, day: string, minute: number) {
+  const at = new Date(clipDayRange(day).start.getTime() + (17 * 60 + minute) * 60_000);
+  const db = new Database(DATABASE_URL.replace(/^file:/, ""));
+  db.prepare("UPDATE Clip SET createdAt = ? WHERE id = ?").run(at.toISOString().replace("Z", "+00:00"), clipId);
+  db.close();
+}
+
 async function seed() {
   const alarmTime = arg("alarm") ?? "06:30";
+  const videos = arg("videos")?.split(",").map((p) => p.trim()).filter(Boolean) ?? [];
+  const local = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASE_URL);
+  const days = local ? Number(arg("days") ?? 4) : 1;
+  if (!local && arg("days")) console.log("원격 서버라 지난 날 클립은 만들지 않음 (--days 무시)");
   const cookies: Record<string, string> = {};
   for (const m of MOCK_MEMBERS) cookies[m.nickname] = await signIn(m.nickname);
 
@@ -82,14 +102,27 @@ async function seed() {
   await call("PUT", `/api/groups/${created.groupId}/alarm`, cookies[owner], { alarmTime, penaltyPoints: 10 });
 
   let clips = 0;
-  for (const m of MOCK_MEMBERS) {
-    const clip = makeClip(m.color);
-    if (!clip) continue;
-    const form = new FormData();
-    form.set("fromMemberId", members[m.nickname].memberId);
-    form.set("file", new File([new Uint8Array(clip)], "mock.webm", { type: "video/webm" }));
-    await call("POST", `/api/groups/${created.groupId}/clips`, members[m.nickname].cookie, form);
-    clips++;
+  for (let d = days - 1; d >= 0; d--) {
+    for (const [i, m] of MOCK_MEMBERS.entries()) {
+      const count = 1 + ((i + d) % 2);
+      for (let k = 0; k < count; k++) {
+        const video = videos.length > 0 ? videos[(i + d + count - 1 - k) % videos.length] : null;
+        const clip = video ? readFileSync(video) : makeClip(m.color);
+        if (!clip) continue;
+        const type = video ? "video/mp4" : "video/webm";
+        const form = new FormData();
+        form.set("fromMemberId", members[m.nickname].memberId);
+        form.set("file", new File([new Uint8Array(clip)], `mock.${type.split("/")[1]}`, { type }));
+        const { clipId } = await call<{ clipId: string }>(
+          "POST",
+          `/api/groups/${created.groupId}/clips`,
+          members[m.nickname].cookie,
+          form,
+        );
+        if (d > 0) backdate(clipId, pastDay(d), i * 10 + k);
+        clips++;
+      }
+    }
   }
 
   mkdirSync("data", { recursive: true });
@@ -100,7 +133,7 @@ async function seed() {
   console.log(`invite  ${created.inviteCode}`);
   console.log(`members ${MOCK_MEMBERS.map((m) => m.nickname).join(", ")} (비밀번호 ${MOCK_PASSWORD})`);
   console.log(`alarm   ${alarmTime}`);
-  console.log(`clips   ${clips}/${MOCK_MEMBERS.length}${clips === 0 ? " (ffmpeg 또는 libvpx 없음)" : ""}`);
+  console.log(`clips   ${clips}개, ${days}일치${clips === 0 ? " (ffmpeg 또는 libvpx 없음)" : ""}`);
 }
 
 async function poke() {
@@ -139,7 +172,7 @@ async function poke() {
 const commands: Record<string, () => Promise<void>> = { seed, poke };
 const run = commands[process.argv[2]];
 if (!run) {
-  console.error("usage: tsx scripts/mock.ts <seed|poke> [--alarm HH:MM] [--group id] [--to nickname] [--every sec] [--times n]");
+  console.error("usage: tsx scripts/mock.ts <seed|poke> [--alarm HH:MM] [--videos a.mp4,b.mp4] [--days n] [--group id] [--to nickname] [--every sec] [--times n]");
   process.exit(1);
 }
 run().catch((e) => {

@@ -26,7 +26,7 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 | `lib/alarm.ts` | 현재 시각과 알람 시각으로 "울려야 하는가", "오늘 날짜 키" 계산 |
 | `lib/attendance.ts` | 응답 목록과 시각으로 멤버별 상태(pending, going, skipping, no_response) 집계 |
 | `lib/penalty.ts` | 확정된 불참 목록으로 포인트 차감 계산 |
-| `lib/clip.ts` | 녹화 형식 선택, 영상/음성 판정 |
+| `lib/clip.ts` | 녹화 형식 선택, 영상/음성 판정, 클립 날짜 키(새벽 4시 경계)와 그날의 시각 범위 |
 | `lib/events.ts` | 그룹별 SSE 구독과 발행 |
 
 ## 데이터 모델 (Prisma)
@@ -53,11 +53,13 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 | POST `/api/groups/:id/respond` | R3 | 오늘 응답 기록. skipping이면 즉시 차감. `response.created` 발행 |
 | POST `/api/groups/:id/clips` | R4 | multipart 업로드. 10초, 8MB 이하, `video/*` 또는 `audio/*`만 허용. `clip.created` 발행 |
 | GET `/api/clips/:id` | R4 | 저장된 mimeType으로 스트림 |
+| GET `/api/groups/:id/clips?date=YYYY-MM-DD` | R4.13 | `days`(클립이 있는 클립 날짜 전부)와 `members`(그 날짜의 멤버별 클립 전부, 최신순). `date`가 없으면 `members`는 빈 배열 |
 | GET `/api/groups/:id/events` | R2, R3, R5 | SSE 스트림 |
 
 - 입력은 Zod로 검증한다. 스키마는 `lib/schemas.ts` 한 곳에만 정의하고 클라이언트도 같은 것을 쓴다.
 - 무응답 확정은 `GET /api/groups/:id`가 호출될 때 지연 평가한다. 별도 스케줄러를 두지 않는다. 확정되면 PenaltyLog를 만들고 `penalty.applied`를 발행한다.
 - 재생할 클립은 서버가 고른다. 받는 사람의 미사용 클립 중 가장 오래된 것을 `GET /api/groups/:id`가 멤버별 `nextClip`으로 내려주고, `respond`가 같은 규칙으로 그 클립의 usedDate를 채운다.
+- 클립 날짜 키는 `createdAt`에서 4시간을 뺀 로컬 날짜다(`lib/clip.ts` `clipDay`). 응답·벌금의 `date`(자정 경계)와는 다른 키다. `GET /api/groups/:id`의 멤버별 `clips`는 지금 클립 날짜 범위 안의 최신 5개다. 화면은 1초 타이머에서 클립 날짜가 바뀌면 다시 불러온다.
 - 시작 포인트는 그룹 생성 시 100, 차감량 기본값은 10이다. 차감량은 알람 설정에서 바꾼다.
 
 ## SSE 이벤트
@@ -72,6 +74,7 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
   - 알람 시각 한 줄. 시각이 없으면 설정으로 가는 안내 하나. "알람 켜기" 버튼은 없다(앱은 WebView 설정으로 자동 재생, 브라우저는 첫 터치로 소리 허락)
   - 멤버 카드 2열 그리드. 내 카드가 맨 앞. 각 카드는 그 멤버의 최근 클립을 소리 없이 반복 재생하고 닉네임과 상태를 보인다. 벌금이 켜져 있을 때만 포인트와 벌금 장부를 보인다
   - 다른 멤버 카드는 눌러서 고른다(토글). 내 카드는 누르면 "클립 만들기" 버튼이 겹쳐 보인다
+  - 헤더 설정 버튼 왼쪽에 달력 버튼. 누르면 헤더 아래에 달력(shadcn Calendar)이 펼쳐지고 클립 있는 날만 고를 수 있다. 지난 날을 고르면 카드가 그날 클립으로 바뀌고 "N월 N일 클립 · 오늘로" 띠가 보인다. 알람이 울리는 동안에는 고른 날과 상관없이 오늘 클립을 보인다(지난 클립이 알람을 가리지 않게)
   - 화면 아래 고정 영역: "Go / No Go"(지금 응답 강조, 알람 중엔 크게), 그 아래 "찌르기". 아래 여백은 `env(safe-area-inset-bottom)`
   - 알람 중: 배경에 잔잔한 원형 파장, 다른 멤버 카드 소리 켜짐. 찔리면: 파장이 세지고 화면이 출렁임(약 2.7초)
   - 별도 알람 오버레이 화면은 두지 않는다
@@ -126,7 +129,7 @@ LLM은 쓰지 않는다. 모든 판단은 결정론 코드다.
 - `alarm.ts`: 시각 경계, 이미 응답한 날, 날짜 키 변경
 - `attendance.ts`: 응답 전, 응답, 10분 경과 무응답
 - `penalty.ts`: 중복 차감 방지, 음수 포인트 허용 여부(허용, 0 미만도 기록)
-- `clip.ts`: 지원 형식 선택 순서, 음성만일 때 audio 형식 선택
+- `clip.ts`: 지원 형식 선택 순서, 음성만일 때 audio 형식 선택, 클립 날짜 4시 경계와 범위
 
 ## 배포
 - 컨테이너 한 개, replicas 1, `Recreate`, `data/`는 PVC. `.kiro/steering/deploy.md`를 따른다.

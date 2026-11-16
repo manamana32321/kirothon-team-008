@@ -26,3 +26,8 @@ export type GroupState = {
     reason: string;
   }[];
 };
+
+export type ClipHistory = {
+  days: string[];
+  members: { id: string; clips: GroupState["members"][number]["clips"] }[];
+};
