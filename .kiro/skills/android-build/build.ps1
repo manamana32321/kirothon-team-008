@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $BuildDir = "C:\gymcall-android"
-$Repo = "~/code/kirothon-team-008"
+$Repo = "~/kirothon-team-008-worktrees/main"
 $env:JAVA_HOME = "D:\Program Files\Android\Android Studio\jbr"
 $env:ANDROID_HOME = "D:\asdk"
 $Adb = "D:\asdk\platform-tools\adb.exe"
